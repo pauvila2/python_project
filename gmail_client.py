@@ -15,7 +15,7 @@ REDIRECT_URI         = os.getenv("REDIRECT_URI")
 
 SCOPES = "https://www.googleapis.com/auth/gmail.readonly"
 
-GMAIL_KEYWORDS = ["factura", "invoice", "receipt", "albaran", "presupuesto"]
+GMAIL_KEYWORDS = ["factura", "invoice", "receipt"]
 
 
 # ─── URLs de OAuth ────────────────────────────────────────────────────────────
@@ -102,7 +102,8 @@ async def get_valid_access_token(db: Session) -> str | None:
 # ─── Lectura de emails ────────────────────────────────────────────────────────
 
 async def list_invoice_emails(access_token: str, max_results: int = 20) -> list[dict]:
-    query = " OR ".join(f'"{kw}"' for kw in GMAIL_KEYWORDS)
+    query_keywords = " OR ".join(f'"{kw}"' for kw in GMAIL_KEYWORDS)
+    query = f"({query_keywords}) has:attachment"
     headers = {"Authorization": f"Bearer {access_token}"}
 
     async with httpx.AsyncClient() as client:
