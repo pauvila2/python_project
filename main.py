@@ -94,10 +94,11 @@ async def gmail_process_email(message_id: str, db: Session = Depends(get_db)):
         if att["mime_type"] == "application/pdf" or att["mime_type"].startswith("image/"):
             data = att["data_b64"]
             if not data.startswith("__attachment_id__"):
-                try:
+               try:
                     extracted = await claude_client.extract_from_base64(data, att["mime_type"])
                     break
-                except Exception:
+                except Exception as e:
+                    print(f"ERROR GEMINI ADJUNTO: {type(e).__name__}: {e}")
                     continue
 
     if not extracted and content.get("body_text"):
