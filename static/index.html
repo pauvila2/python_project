@@ -6,138 +6,764 @@
 <title>Expediente</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+
 <style>
 :root{
-  --ink:#14171C;--ink-2:#1B1F26;--ink-3:#242933;
-  --paper:#EDE7D9;--paper-2:#E2DAC5;--paper-line:#C9C0A6;
-  --stamp-grey:#6B6659;--stamp-gold:#B8901F;--stamp-green:#4B5D3A;--stamp-red:#9C3D2E;
-  --text-ink:#211F1A;--text-light:#EFEBDF;--muted:#8A8578;--muted-dark:#5B6270;
+  --ink:#14171C;
+  --ink-2:#1B1F26;
+  --ink-3:#242933;
+  --paper:#EDE7D9;
+  --paper-2:#E2DAC5;
+  --paper-line:#C9C0A6;
+  --stamp-grey:#6B6659;
+  --stamp-gold:#B8901F;
+  --stamp-green:#4B5D3A;
+  --stamp-red:#9C3D2E;
+  --text-ink:#211F1A;
+  --text-light:#EFEBDF;
+  --muted:#8A8578;
+  --muted-dark:#5B6270;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--ink);color:var(--text-light);font-family:'Inter',sans-serif;line-height:1.5;min-height:100vh;}
-.wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px;}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  background:var(--ink);
+  color:var(--text-light);
+  font-family:'Inter',sans-serif;
+  line-height:1.5;
+  min-height:100vh;
+}
+
+.wrap{
+  max-width:920px;
+  margin:0 auto;
+  padding:28px 20px 80px;
+}
 
 /* header */
-.er-header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:6px;flex-wrap:wrap;}
-.er-title{font-family:'Fraunces',serif;font-weight:600;font-size:34px;letter-spacing:-0.01em;}
-.er-title em{color:var(--stamp-gold);font-style:italic;}
-.er-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px;}
-.er-folio{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-align:right;line-height:1.7;}
-hr.er-rule{border:none;border-top:1px solid #33394480;margin:20px 0 26px;}
+
+.er-header{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:6px;
+  flex-wrap:wrap;
+}
+
+.er-title{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:34px;
+  letter-spacing:-0.01em;
+}
+
+.er-title em{
+  color:var(--stamp-gold);
+  font-style:italic;
+}
+
+.er-sub{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-top:6px;
+}
+
+.er-folio{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--muted);
+  text-align:right;
+  line-height:1.7;
+}
+
+hr.er-rule{
+  border:none;
+  border-top:1px solid #33394480;
+  margin:20px 0 26px;
+}
 
 /* tabs */
-.er-tabs{display:flex;gap:2px;margin-bottom:20px;}
-.er-tab{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:10px 18px;background:var(--ink-2);color:var(--muted);border:1px solid #33394480;border-bottom:none;cursor:pointer;border-radius:6px 6px 0 0;transition:all .15s;}
-.er-tab.active{background:var(--paper);color:var(--text-ink);border-color:var(--paper);}
-.er-tab:hover:not(.active){color:var(--text-light);}
+
+.er-tabs{
+  display:flex;
+  gap:2px;
+  margin-bottom:20px;
+}
+
+.er-tab{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  padding:10px 18px;
+  background:var(--ink-2);
+  color:var(--muted);
+  border:1px solid #33394480;
+  border-bottom:none;
+  cursor:pointer;
+  border-radius:6px 6px 0 0;
+  transition:all .15s;
+}
+
+.er-tab.active{
+  background:var(--paper);
+  color:var(--text-ink);
+  border-color:var(--paper);
+}
+
+.er-tab:hover:not(.active){
+  color:var(--text-light);
+}
 
 /* panel */
-.er-panel{background:var(--paper);color:var(--text-ink);border-radius:2px 10px 10px 10px;padding:26px;box-shadow:0 20px 40px -20px rgba(0,0,0,.5);margin-bottom:18px;}
-.er-section-title{font-family:'Fraunces',serif;font-size:19px;font-weight:600;margin:0 0 4px;}
-.er-section-hint{font-size:12.5px;color:var(--muted-dark);margin:0 0 16px;}
+
+.er-panel{
+  background:var(--paper);
+  color:var(--text-ink);
+  border-radius:2px 10px 10px 10px;
+  padding:26px;
+  box-shadow:0 20px 40px -20px rgba(0,0,0,.5);
+  margin-bottom:18px;
+}
+
+.er-section-title{
+  font-family:'Fraunces',serif;
+  font-size:19px;
+  font-weight:600;
+  margin:0 0 4px;
+}
+
+.er-section-hint{
+  font-size:12.5px;
+  color:var(--muted-dark);
+  margin:0 0 16px;
+}
 
 /* gmail banner */
-.er-gmail{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--paper-2);border:1px dashed var(--paper-line);border-radius:8px;padding:14px 16px;margin-bottom:18px;}
-.er-gmail-left{display:flex;align-items:center;gap:12px;}
-.er-gmail-dot{width:9px;height:9px;border-radius:50%;background:var(--stamp-grey);flex-shrink:0;}
-.er-gmail-dot.connected{background:var(--stamp-green);}
-.er-gmail-text b{display:block;font-size:13.5px;}
-.er-gmail-text span{font-size:11.5px;color:var(--muted-dark);}
+
+.er-gmail{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  background:var(--paper-2);
+  border:1px dashed var(--paper-line);
+  border-radius:8px;
+  padding:14px 16px;
+  margin-bottom:18px;
+}
+
+.er-gmail-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.er-gmail-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--stamp-grey);
+  flex-shrink:0;
+}
+
+.er-gmail-dot.connected{
+  background:var(--stamp-green);
+}
+
+.er-gmail-text b{
+  display:block;
+  font-size:13.5px;
+}
+
+.er-gmail-text span{
+  font-size:11.5px;
+  color:var(--muted-dark);
+}
 
 /* source toggle */
-.er-source-toggle{display:flex;gap:8px;margin-bottom:14px;}
-.er-toggle-btn{flex:1;font-size:13px;font-weight:600;padding:10px;border-radius:7px;border:1.5px solid var(--paper-line);background:transparent;color:var(--text-ink);cursor:pointer;transition:all .15s;}
-.er-toggle-btn.active{background:var(--text-ink);color:var(--paper);border-color:var(--text-ink);}
 
-textarea.er-textarea{width:100%;min-height:150px;border:1.5px solid var(--paper-line);border-radius:8px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:#FBF9F3;color:var(--text-ink);resize:vertical;}
-textarea.er-textarea:focus{outline:2px solid var(--stamp-gold);outline-offset:1px;}
+.er-source-toggle{
+  display:flex;
+  gap:8px;
+  margin-bottom:14px;
+}
 
-.er-filedrop{border:1.5px dashed var(--paper-line);border-radius:8px;padding:26px 16px;text-align:center;cursor:pointer;background:#FBF9F3;}
-.er-filedrop:hover{border-color:var(--stamp-gold);}
-.er-filedrop input{display:none;}
-.er-filedrop-label{font-size:13px;color:var(--muted-dark);}
-.er-filedrop-label b{color:var(--text-ink);}
-.er-file-preview{display:flex;align-items:center;gap:10px;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;background:#FBF9F3;border:1px solid var(--paper-line);border-radius:6px;padding:8px 10px;}
-.er-file-preview img{height:38px;border-radius:3px;}
-.er-file-remove{margin-left:auto;background:none;border:none;color:var(--stamp-red);cursor:pointer;font-size:12px;text-decoration:underline;}
+.er-toggle-btn{
+  flex:1;
+  font-size:13px;
+  font-weight:600;
+  padding:10px;
+  border-radius:7px;
+  border:1.5px solid var(--paper-line);
+  background:transparent;
+  color:var(--text-ink);
+  cursor:pointer;
+  transition:all .15s;
+}
 
-.er-privacy-note{font-size:11.5px;color:var(--muted-dark);margin-top:10px;line-height:1.5;}
-.er-error{background:#3d1f1c;border:1px solid var(--stamp-red);color:#F3D3CD;padding:12px 14px;border-radius:8px;font-size:13px;margin-top:16px;}
+.er-toggle-btn.active{
+  background:var(--text-ink);
+  color:var(--paper);
+  border-color:var(--text-ink);
+}
+
+textarea.er-textarea{
+  width:100%;
+  min-height:150px;
+  border:1.5px solid var(--paper-line);
+  border-radius:8px;
+  padding:14px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;
+  background:#FBF9F3;
+  color:var(--text-ink);
+  resize:vertical;
+}
+
+textarea.er-textarea:focus{
+  outline:2px solid var(--stamp-gold);
+  outline-offset:1px;
+}
+
+.er-filedrop{
+  border:1.5px dashed var(--paper-line);
+  border-radius:8px;
+  padding:26px 16px;
+  text-align:center;
+  cursor:pointer;
+  background:#FBF9F3;
+}
+
+.er-filedrop:hover{
+  border-color:var(--stamp-gold);
+}
+
+.er-filedrop input{
+  display:none;
+}
+
+.er-filedrop-label{
+  font-size:13px;
+  color:var(--muted-dark);
+}
+
+.er-filedrop-label b{
+  color:var(--text-ink);
+}
+
+.er-file-preview{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  background:#FBF9F3;
+  border:1px solid var(--paper-line);
+  border-radius:6px;
+  padding:8px 10px;
+}
+
+.er-file-preview img{
+  height:38px;
+  border-radius:3px;
+}
+
+.er-file-remove{
+  margin-left:auto;
+  background:none;
+  border:none;
+  color:var(--stamp-red);
+  cursor:pointer;
+  font-size:12px;
+  text-decoration:underline;
+}
+
+.er-privacy-note{
+  font-size:11.5px;
+  color:var(--muted-dark);
+  margin-top:10px;
+  line-height:1.5;
+}
+
+.er-error{
+  background:#3d1f1c;
+  border:1px solid var(--stamp-red);
+  color:#F3D3CD;
+  padding:12px 14px;
+  border-radius:8px;
+  font-size:13px;
+  margin-top:16px;
+}
 
 /* buttons */
-.er-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
-.er-btn{font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:11px 20px;border-radius:6px;border:none;cursor:pointer;transition:transform .1s,opacity .15s;}
-.er-btn:active{transform:scale(.97);}
-.er-btn-primary{background:var(--text-ink);color:var(--paper);}
-.er-btn-primary:disabled{opacity:.45;cursor:not-allowed;}
-.er-btn-ghost{background:transparent;color:var(--text-ink);border:1.5px solid var(--text-ink);}
-.er-btn-danger{background:transparent;color:var(--stamp-red);border:1.5px solid var(--stamp-red);}
-.er-btn-sm{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;padding:7px 12px;border-radius:5px;cursor:pointer;}
-.er-btn-disabled{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;background:#00000012;color:var(--muted-dark);border:1px solid var(--paper-line);padding:8px 14px;border-radius:6px;cursor:not-allowed;white-space:nowrap;}
+
+.er-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:18px;
+}
+
+.er-btn{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  font-weight:600;
+  padding:11px 20px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+  transition:transform .1s,opacity .15s;
+}
+
+.er-btn:active{
+  transform:scale(.97);
+}
+
+.er-btn-primary{
+  background:var(--text-ink);
+  color:var(--paper);
+}
+
+.er-btn-primary:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.er-btn-ghost{
+  background:transparent;
+  color:var(--text-ink);
+  border:1.5px solid var(--text-ink);
+}
+
+.er-btn-danger{
+  background:transparent;
+  color:var(--stamp-red);
+  border:1.5px solid var(--stamp-red);
+}
+
+.er-btn-sm{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  text-transform:uppercase;
+  padding:7px 12px;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+.er-btn-disabled{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  background:#00000012;
+  color:var(--muted-dark);
+  border:1px solid var(--paper-line);
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:not-allowed;
+  white-space:nowrap;
+}
 
 /* processing */
-.er-processing{display:flex;flex-direction:column;align-items:center;gap:14px;padding:34px 10px;}
-.er-spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--paper-line);border-top-color:var(--stamp-gold);animation:er-spin 0.8s linear infinite;}
-@keyframes er-spin{to{transform:rotate(360deg);}}
-.er-processing-step{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-dark);}
+
+.er-processing{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  padding:34px 10px;
+}
+
+.er-spinner{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  border:3px solid var(--paper-line);
+  border-top-color:var(--stamp-gold);
+  animation:er-spin .8s linear infinite;
+}
+
+@keyframes er-spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+.er-processing-step{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted-dark);
+}
 
 /* stamp */
-.er-stamp{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:4px 10px 4px 8px;border-radius:20px;border:1.5px solid currentColor;transform:rotate(-2deg);white-space:nowrap;}
-.er-stamp::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
-.er-stamp.grey{color:var(--stamp-grey);}
-.er-stamp.gold{color:var(--stamp-gold);}
-.er-stamp.green{color:var(--stamp-green);}
-.er-stamp.red{color:var(--stamp-red);}
+
+.er-stamp{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  font-weight:600;
+  padding:4px 10px 4px 8px;
+  border-radius:20px;
+  border:1.5px solid currentColor;
+  transform:rotate(-2deg);
+  white-space:nowrap;
+}
+
+.er-stamp::before{
+  content:'';
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:currentColor;
+}
+
+.er-stamp.grey{
+  color:var(--stamp-grey);
+}
+
+.er-stamp.gold{
+  color:var(--stamp-gold);
+}
+
+.er-stamp.green{
+  color:var(--stamp-green);
+}
+
+.er-stamp.red{
+  color:var(--stamp-red);
+}
 
 /* form grid */
-.er-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
-.er-field{display:flex;flex-direction:column;gap:5px;}
-.er-field.full{grid-column:1/-1;}
-.er-field label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-dark);font-weight:600;}
-.er-field input,.er-field select{border:1.5px solid var(--paper-line);border-radius:6px;padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:#FBF9F3;color:var(--text-ink);}
-.er-field input:focus{outline:2px solid var(--stamp-gold);outline-offset:1px;}
+
+.er-form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:16px;
+}
+
+.er-field{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.er-field.full{
+  grid-column:1/-1;
+}
+
+.er-field label{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--muted-dark);
+  font-weight:600;
+}
+
+.er-field input,
+.er-field select{
+  border:1.5px solid var(--paper-line);
+  border-radius:6px;
+  padding:9px 10px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+  background:#FBF9F3;
+  color:var(--text-ink);
+}
+
+.er-field input:focus{
+  outline:2px solid var(--stamp-gold);
+  outline-offset:1px;
+}
 
 /* archive */
-.er-empty{text-align:center;padding:50px 20px;color:var(--muted-dark);}
-.er-empty b{display:block;font-family:'Fraunces',serif;font-size:18px;color:var(--text-ink);margin-bottom:6px;}
-.er-toolbar{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
-.er-search{flex:1;min-width:160px;border:1.5px solid var(--paper-line);border-radius:6px;padding:9px 12px;font-size:13px;background:#FBF9F3;color:var(--text-ink);}
-.er-stats{display:flex;gap:22px;margin-bottom:18px;flex-wrap:wrap;}
-.er-stat b{display:block;font-family:'Fraunces',serif;font-size:24px;color:var(--text-ink);}
-.er-stat span{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-dark);}
-.er-card{border:1px solid var(--paper-line);border-radius:8px;padding:14px 16px;margin-bottom:10px;background:#FBF9F3;cursor:pointer;}
-.er-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
-.er-card-folio{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted-dark);}
-.er-card-prov{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:2px 0 4px;}
-.er-card-meta{font-size:12px;color:var(--muted-dark);display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
-.er-card-amount{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;text-align:right;}
-.er-card-detail{margin-top:12px;padding-top:12px;border-top:1px dashed var(--paper-line);display:none;}
-.er-card.open .er-card-detail{display:block;}
-.er-card-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12.5px;margin-bottom:12px;}
-.er-card-detail-grid div span{display:block;color:var(--muted-dark);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;}
-.er-card-detail-actions{display:flex;justify-content:flex-end;gap:8px;}
+
+.er-empty{
+  text-align:center;
+  padding:50px 20px;
+  color:var(--muted-dark);
+}
+
+.er-empty b{
+  display:block;
+  font-family:'Fraunces',serif;
+  font-size:18px;
+  color:var(--text-ink);
+  margin-bottom:6px;
+}
+
+.er-toolbar{
+  display:flex;
+  gap:10px;
+  margin-bottom:16px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.er-search{
+  flex:1;
+  min-width:160px;
+  border:1.5px solid var(--paper-line);
+  border-radius:6px;
+  padding:9px 12px;
+  font-size:13px;
+  background:#FBF9F3;
+  color:var(--text-ink);
+}
+
+.er-stats{
+  display:flex;
+  gap:22px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
+}
+
+.er-stat b{
+  display:block;
+  font-family:'Fraunces',serif;
+  font-size:24px;
+  color:var(--text-ink);
+}
+
+.er-stat span{
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--muted-dark);
+}
+
+.er-card{
+  border:1px solid var(--paper-line);
+  border-radius:8px;
+  padding:14px 16px;
+  margin-bottom:10px;
+  background:#FBF9F3;
+  cursor:pointer;
+}
+
+.er-card-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+}
+
+.er-card-folio{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  color:var(--muted-dark);
+}
+
+.er-card-prov{
+  font-family:'Fraunces',serif;
+  font-size:17px;
+  font-weight:600;
+  margin:2px 0 4px;
+}
+
+.er-card-meta{
+  font-size:12px;
+  color:var(--muted-dark);
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.er-card-amount{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:18px;
+  font-weight:600;
+  text-align:right;
+}
+
+.er-card-detail{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px dashed var(--paper-line);
+  display:none;
+}
+
+.er-card.open .er-card-detail{
+  display:block;
+}
+
+.er-card-detail-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  font-size:12.5px;
+  margin-bottom:12px;
+}
+
+.er-card-detail-grid div span{
+  display:block;
+  color:var(--muted-dark);
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+.er-card-detail-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+}
 
 /* holded config panel */
-.er-holded-form{display:flex;gap:8px;margin-top:10px;}
-.er-holded-form input{flex:1;border:1.5px solid var(--paper-line);border-radius:6px;padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;background:#FBF9F3;color:var(--text-ink);}
-.er-holded-form input:focus{outline:2px solid var(--stamp-gold);outline-offset:1px;}
+
+.er-holded-form{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+.er-holded-form input{
+  flex:1;
+  border:1.5px solid var(--paper-line);
+  border-radius:6px;
+  padding:9px 10px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  background:#FBF9F3;
+  color:var(--text-ink);
+}
+
+.er-holded-form input:focus{
+  outline:2px solid var(--stamp-gold);
+  outline-offset:1px;
+}
+
+/* gmail emails */
+
+.er-gmail-emails{
+  margin-bottom:18px;
+}
+
+.er-gmail-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+  flex-wrap:wrap;
+}
+
+.er-gmail-email{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:10px 12px;
+  background:#FBF9F3;
+  border:1px solid var(--paper-line);
+  border-radius:6px;
+  margin-bottom:6px;
+  font-size:12.5px;
+}
+
+.er-gmail-email-info{
+  min-width:0;
+  flex:1;
+}
+
+.er-gmail-email-info b{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.er-gmail-email-meta{
+  color:var(--muted-dark);
+  font-size:11px;
+  margin-top:2px;
+}
+
+.er-gmail-empty{
+  padding:18px;
+  text-align:center;
+  background:#FBF9F3;
+  border:1px dashed var(--paper-line);
+  border-radius:7px;
+  color:var(--muted-dark);
+  font-size:12px;
+}
+
+/* mobile */
 
 @media(max-width:520px){
-  .er-form-grid{grid-template-columns:1fr;}
-  .er-card-detail-grid{grid-template-columns:1fr;}
-  .er-title{font-size:26px;}
+
+  .er-form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .er-card-detail-grid{
+    grid-template-columns:1fr;
+  }
+
+  .er-title{
+    font-size:26px;
+  }
+
+  .er-gmail{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .er-gmail-email{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .er-gmail-email button{
+    width:100%;
+  }
+
+  .er-gmail-toolbar{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .er-gmail-toolbar button{
+    width:100%;
+  }
 }
 </style>
 </head>
+
 <body>
+
 <div class="wrap">
+
   <div class="er-header">
     <div>
       <div class="er-title">Exped<em>i</em>ente</div>
       <div class="er-sub">Gestión de facturas · Gemini AI</div>
     </div>
+
     <div class="er-folio" id="er-folio-count"></div>
   </div>
+
   <hr class="er-rule"/>
 
   <div class="er-tabs">
@@ -147,467 +773,2025 @@ textarea.er-textarea:focus{outline:2px solid var(--stamp-gold);outline-offset:1p
   </div>
 
   <div id="er-content"></div>
+
 </div>
 
 <script>
 (function(){
-  // ── API base URL: mismo origen cuando lo sirve FastAPI ──
+
+  // ── API base URL ──────────────────────────────────────────
   const API = '';
 
+  // ── Estado ────────────────────────────────────────────────
   const state = {
-    tab: 'nuevo',
-    sourceMode: 'texto',
-    pastedText: '',
-    file: null,
-    processing: false,
-    stage: '',
-    extracted: null,
-    error: null,
-    archive: [],
-    archiveLoaded: false,
-    search: '',
-    gmailConnected: false,
-    gmailEmails: [],
-    gmailLoading: false,
-    holdedConfigured: false,
-    holdedApiKey: '',
-    holdedSaving: false,
-    holdedError: null,
-    holdedSuccess: null,
+    tab:'nuevo',
+
+    sourceMode:'texto',
+    pastedText:'',
+    file:null,
+
+    processing:false,
+    stage:'',
+    extracted:null,
+    error:null,
+
+    archive:[],
+    archiveLoaded:false,
+    search:'',
+
+    gmailConnected:false,
+    gmailEmails:[],
+    gmailLoading:false,
+    gmailError:null,
+
+    holdedConfigured:false,
+    holdedApiKey:'',
+    holdedSaving:false,
+    holdedError:null,
+    holdedSuccess:null,
   };
 
   const content = document.getElementById('er-content');
 
-  // ── helpers ──────────────────────────────────────────────
-  function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  function fmtMoney(n, cur){ if(n==null)return '—'; try{return new Intl.NumberFormat('es-ES',{style:'currency',currency:cur||'EUR'}).format(n);}catch(e){return n+' '+(cur||'EUR');} }
+
+  // ── Helpers ───────────────────────────────────────────────
+
+  function esc(s){
+    return String(s??'').replace(
+      /[&<>"']/g,
+      c=>({
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#39;'
+      }[c])
+    );
+  }
+
+  function fmtMoney(n,cur){
+    if(n==null)return '—';
+
+    try{
+      return new Intl.NumberFormat('es-ES',{
+        style:'currency',
+        currency:cur||'EUR'
+      }).format(n);
+    }catch(e){
+      return n+' '+(cur||'EUR');
+    }
+  }
+
   function stampHTML(status){
-    const m={recibido:['grey','Recibido'],seudonimizado:['gold','Seudonimizado'],validado:['green','Validado'],enviado_holded:['green','En Holded'],error:['red','Error']};
+
+    const m={
+      recibido:['grey','Recibido'],
+      seudonimizado:['gold','Seudonimizado'],
+      validado:['green','Validado'],
+      enviado_holded:['green','En Holded'],
+      error:['red','Error']
+    };
+
     const [cls,label]=m[status]||m.recibido;
+
     return `<span class="er-stamp ${cls}">${label}</span>`;
   }
 
-  // ── API calls ─────────────────────────────────────────────
-  async function apiFetch(path, opts={}){
-    const res = await fetch(API + path, {
-      headers:{'Content-Type':'application/json', ...(opts.headers||{})},
+
+  // ── API ───────────────────────────────────────────────────
+
+  async function apiFetch(path,opts={}){
+
+    const res=await fetch(API+path,{
+      headers:{
+        'Content-Type':'application/json',
+        ...(opts.headers||{})
+      },
       ...opts
     });
+
     if(!res.ok){
-      let msg = `Error ${res.status}`;
-      try{ const j=await res.json(); msg = j.detail || msg; }catch(e){}
+
+      let msg=`Error ${res.status}`;
+
+      try{
+        const j=await res.json();
+        msg=j.detail||msg;
+      }catch(e){}
+
       throw new Error(msg);
     }
+
     return res.json();
   }
 
-  // ── Gmail ─────────────────────────────────────────────────
+
+  // ── Gmail ────────────────────────────────────────────────
+
   async function checkGmailStatus(){
-    try{ const d=await apiFetch('/gmail/status'); state.gmailConnected=d.connected; }catch(e){ state.gmailConnected=false; }
+
+    try{
+
+      const d=await apiFetch('/gmail/status');
+
+      state.gmailConnected=Boolean(d.connected);
+
+      if(!state.gmailConnected){
+        state.gmailEmails=[];
+      }
+
+    }catch(e){
+
+      console.error('Error comprobando Gmail:',e);
+
+      state.gmailConnected=false;
+      state.gmailEmails=[];
+    }
   }
+
+
+  async function connectGmail(){
+
+    try{
+
+      const d=await apiFetch('/gmail/auth-url');
+
+      if(!d.url){
+        throw new Error('El servidor no devolvió una URL de autenticación.');
+      }
+
+      window.location.href=d.url;
+
+    }catch(err){
+
+      console.error(err);
+
+      alert(
+        'Error obteniendo URL de autenticación de Gmail: '+
+        err.message
+      );
+    }
+  }
+
+
+  async function disconnectGmail(){
+
+    if(!confirm('¿Desconectar la cuenta de Gmail?')){
+      return;
+    }
+
+    try{
+
+      state.gmailLoading=true;
+      state.gmailError=null;
+
+      render();
+
+      await apiFetch('/gmail/disconnect',{
+        method:'DELETE'
+      });
+
+      state.gmailConnected=false;
+      state.gmailEmails=[];
+      state.gmailLoading=false;
+      state.gmailError=null;
+      state.error=null;
+
+      render();
+
+    }catch(err){
+
+      console.error('Error desconectando Gmail:',err);
+
+      state.gmailLoading=false;
+      state.gmailError='Error desconectando Gmail: '+err.message;
+
+      render();
+    }
+  }
+
 
   async function loadGmailEmails(){
-    state.gmailLoading=true; render();
+
+    if(!state.gmailConnected){
+      state.gmailError='Gmail no está conectado.';
+      render();
+      return;
+    }
+
+    state.gmailLoading=true;
+    state.gmailError=null;
+
+    render();
+
     try{
+
       const d=await apiFetch('/gmail/emails');
-      state.gmailEmails=d.emails||[];
-    }catch(e){ state.error='Error cargando emails: '+e.message; }
-    state.gmailLoading=false; render();
+
+      state.gmailEmails=Array.isArray(d.emails)
+        ? d.emails
+        : [];
+
+    }catch(e){
+
+      console.error('Error cargando emails:',e);
+
+      state.gmailEmails=[];
+      state.gmailError='Error cargando emails: '+e.message;
+
+    }finally{
+
+      state.gmailLoading=false;
+
+      render();
+    }
   }
+
 
   async function processGmailEmail(messageId){
-    state.processing=true; state.stage='Procesando email con IA…'; state.error=null; render();
+
+    state.processing=true;
+    state.stage='Procesando email con IA…';
+    state.error=null;
+
+    render();
+
     try{
-      const d=await apiFetch('/gmail/process/'+messageId,{method:'POST'});
+
+      const d=await apiFetch(
+        '/gmail/process/'+encodeURIComponent(messageId),
+        {
+          method:'POST'
+        }
+      );
+
       state.extracted=d.extracted;
-    }catch(e){ state.error='Error procesando email: '+e.message; }
-    state.processing=false; state.stage=''; render();
+
+    }catch(e){
+
+      console.error(e);
+
+      state.error='Error procesando email: '+e.message;
+
+    }finally{
+
+      state.processing=false;
+      state.stage='';
+
+      render();
+    }
   }
+
 
   // ── Extract ───────────────────────────────────────────────
+
   async function handleProcess(){
+
     state.error=null;
-    if(state.sourceMode==='texto' && !state.pastedText.trim()){ state.error='Pega el texto del email antes de procesar.'; render(); return; }
-    if(state.sourceMode==='archivo' && !state.file){ state.error='Sube una imagen o PDF antes de procesar.'; render(); return; }
-    state.processing=true; state.stage='Enviando a Gemini para extraer campos…'; render();
+
+    if(
+      state.sourceMode==='texto' &&
+      !state.pastedText.trim()
+    ){
+
+      state.error='Pega el texto del email antes de procesar.';
+      render();
+      return;
+    }
+
+    if(
+      state.sourceMode==='archivo' &&
+      !state.file
+    ){
+
+      state.error='Sube una imagen o PDF antes de procesar.';
+      render();
+      return;
+    }
+
+    state.processing=true;
+    state.stage='Enviando a Gemini para extraer campos…';
+
+    render();
+
     try{
+
       let d;
+
       if(state.sourceMode==='texto'){
-        d=await apiFetch('/extract/text',{method:'POST',body:JSON.stringify({text:state.pastedText})});
-      } else {
-        d=await apiFetch('/extract/file',{method:'POST',body:JSON.stringify({data_b64:state.file.base64,mime_type:state.file.mime})});
+
+        d=await apiFetch(
+          '/extract/text',
+          {
+            method:'POST',
+            body:JSON.stringify({
+              text:state.pastedText
+            })
+          }
+        );
+
+      }else{
+
+        d=await apiFetch(
+          '/extract/file',
+          {
+            method:'POST',
+            body:JSON.stringify({
+              data_b64:state.file.base64,
+              mime_type:state.file.mime
+            })
+          }
+        );
       }
+
       state.extracted=d.extracted;
-    }catch(e){ state.error='Error al procesar: '+e.message; }
-    state.processing=false; state.stage=''; render();
+
+    }catch(e){
+
+      state.error='Error al procesar: '+e.message;
+
+    }finally{
+
+      state.processing=false;
+      state.stage='';
+
+      render();
+    }
   }
+
 
   // ── Expedientes ───────────────────────────────────────────
+
   async function loadArchive(){
+
     try{
+
       const d=await apiFetch('/expedientes');
+
       state.archive=d.expedientes||[];
-    }catch(e){ state.archive=[]; }
+
+    }catch(e){
+
+      console.error(e);
+
+      state.archive=[];
+    }
+
     state.archiveLoaded=true;
-    document.getElementById('er-folio-count').textContent=state.archive.length+' expediente(s)';
+
+    document.getElementById('er-folio-count').textContent=
+      state.archive.length+' expediente(s)';
   }
 
+
   async function saveExpediente(){
+
     try{
+
       syncFieldsFromForm();
+
       const ex=state.extracted;
-      await apiFetch('/expedientes',{method:'POST',body:JSON.stringify({
-        proveedor:ex.proveedor||'Sin identificar',
-        nif_proveedor:ex.nif_proveedor||null,
-        fecha:ex.fecha||null,
-        concepto:ex.concepto||null,
-        base_imponible:parseNum(ex.base_imponible),
-        iva_porcentaje:parseNum(ex.iva_porcentaje),
-        iva_importe:parseNum(ex.iva_importe),
-        total:parseNum(ex.total),
-        moneda:ex.moneda||'EUR',
-        gmail_message_id:ex._gmail_message_id||null
-      })});
-      state.extracted=null; state.pastedText=''; state.file=null;
+
+      await apiFetch(
+        '/expedientes',
+        {
+          method:'POST',
+          body:JSON.stringify({
+            proveedor:ex.proveedor||'Sin identificar',
+            nif_proveedor:ex.nif_proveedor||null,
+            fecha:ex.fecha||null,
+            concepto:ex.concepto||null,
+            base_imponible:parseNum(ex.base_imponible),
+            iva_porcentaje:parseNum(ex.iva_porcentaje),
+            iva_importe:parseNum(ex.iva_importe),
+            total:parseNum(ex.total),
+            moneda:ex.moneda||'EUR',
+            gmail_message_id:ex._gmail_message_id||null
+          })
+        }
+      );
+
+      state.extracted=null;
+      state.pastedText='';
+      state.file=null;
+
       await loadArchive();
+
       state.tab='archivo';
-    }catch(e){ state.error='Error al guardar: '+e.message; }
+
+    }catch(e){
+
+      state.error='Error al guardar: '+e.message;
+    }
+
     render();
   }
 
+
   async function deleteExpediente(id){
-    try{ await apiFetch('/expedientes/'+id,{method:'DELETE'}); await loadArchive(); render(); }
-    catch(e){ alert('Error al eliminar: '+e.message); }
+
+    try{
+
+      await apiFetch(
+        '/expedientes/'+id,
+        {
+          method:'DELETE'
+        }
+      );
+
+      await loadArchive();
+
+      render();
+
+    }catch(e){
+
+      alert('Error al eliminar: '+e.message);
+    }
   }
+
 
   async function sendToHolded(id){
+
     try{
-      await apiFetch('/expedientes/'+id+'/holded',{method:'POST'});
-      await loadArchive(); render();
-    }catch(e){ alert('Error al enviar a Holded: '+e.message); }
+
+      await apiFetch(
+        '/expedientes/'+id+'/holded',
+        {
+          method:'POST'
+        }
+      );
+
+      await loadArchive();
+
+      render();
+
+    }catch(e){
+
+      alert('Error al enviar a Holded: '+e.message);
+    }
   }
 
-  function parseNum(v){ if(v==null||v==='')return null; const n=typeof v==='number'?v:parseFloat(String(v).replace(',','.')); return isNaN(n)?null:n; }
 
-  function syncFieldsFromForm(){
-    document.querySelectorAll('[data-field]').forEach(inp=>{ state.extracted[inp.dataset.field]=inp.value; });
-  }
+  function parseNum(v){
 
-  // ── Holded config ─────────────────────────────────────────
-  async function checkHoldedStatus(){
-    try{ const d=await apiFetch('/config/holded'); state.holdedConfigured=d.configured; }catch(e){}
-  }
-
-  async function saveHoldedKey(){
-    if(!state.holdedApiKey.trim()){ state.holdedError='Introduce la API key.'; render(); return; }
-    state.holdedSaving=true; state.holdedError=null; state.holdedSuccess=null; render();
-    try{
-      await apiFetch('/config/holded',{method:'POST',body:JSON.stringify({api_key:state.holdedApiKey})});
-      state.holdedConfigured=true; state.holdedSuccess='API key guardada y verificada.'; state.holdedApiKey='';
-    }catch(e){ state.holdedError='Error: '+e.message; }
-    state.holdedSaving=false; render();
-  }
-
-  async function deleteHoldedKey(){
-    if(!confirm('¿Eliminar la API key de Holded?'))return;
-    try{ await apiFetch('/config/holded',{method:'DELETE'}); state.holdedConfigured=false; render(); }catch(e){}
-  }
-
-  // ── Render ────────────────────────────────────────────────
-  function renderNuevo(){
-    const gmailDot = state.gmailConnected ? 'connected' : '';
-    const gmailLabel = state.gmailConnected ? 'Gmail conectado' : 'Conectar Gmail';
-    const gmailSub = state.gmailConnected ? 'Puedes cargar emails con facturas directamente' : 'Conecta tu cuenta para cargar facturas automáticamente';
-    const gmailBtn = state.gmailConnected
-      ? `<button class="er-btn er-btn-ghost" style="font-family:'IBM Plex Mono',monospace;font-size:11px;" data-action="gmail-emails">Ver emails</button>`
-      : `<button class="er-btn er-btn-ghost" style="font-family:'IBM Plex Mono',monospace;font-size:11px;" data-action="gmail-connect">Conectar</button>`;
-
-    let gmailEmailsHTML = '';
-    if(state.gmailConnected && state.gmailEmails.length > 0){
-      gmailEmailsHTML = `<div style="margin-bottom:16px;">
-        <div class="er-section-hint">Emails con facturas detectadas:</div>
-        ${state.gmailEmails.map(e=>`
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#FBF9F3;border:1px solid var(--paper-line);border-radius:6px;margin-bottom:6px;font-size:12.5px;">
-            <div><b>${esc(e.subject||'Sin asunto')}</b><div style="color:var(--muted-dark);font-size:11px;">${esc(e.from||'')} · ${esc(e.date||'')}</div></div>
-            <button class="er-btn-sm er-btn-primary" data-action="gmail-process" data-id="${esc(e.id)}" style="background:var(--text-ink);color:var(--paper);border:none;">Procesar</button>
-          </div>
-        `).join('')}
-      </div>`;
-    } else if(state.gmailConnected && state.gmailLoading){
-      gmailEmailsHTML = `<div class="er-processing"><div class="er-spinner"></div><div class="er-processing-step">Cargando emails…</div></div>`;
+    if(v==null||v===''){
+      return null;
     }
 
-    return `
-      <div class="er-panel">
-        <div class="er-gmail">
-          <div class="er-gmail-left">
-            <div class="er-gmail-dot ${gmailDot}"></div>
-            <div class="er-gmail-text"><b>${gmailLabel}</b><span>${gmailSub}</span></div>
-          </div>
-          ${gmailBtn}
+    const n=
+      typeof v==='number'
+        ? v
+        : parseFloat(String(v).replace(',','.'));
+
+    return isNaN(n)?null:n;
+  }
+
+
+  function syncFieldsFromForm(){
+
+    document
+      .querySelectorAll('[data-field]')
+      .forEach(inp=>{
+        state.extracted[inp.dataset.field]=inp.value;
+      });
+  }
+
+
+  // ── Holded ────────────────────────────────────────────────
+
+  async function checkHoldedStatus(){
+
+    try{
+
+      const d=await apiFetch('/config/holded');
+
+      state.holdedConfigured=d.configured;
+
+    }catch(e){
+
+      console.error('Error comprobando Holded:',e);
+    }
+  }
+
+
+  async function saveHoldedKey(){
+
+    if(!state.holdedApiKey.trim()){
+
+      state.holdedError='Introduce la API key.';
+
+      render();
+
+      return;
+    }
+
+    state.holdedSaving=true;
+    state.holdedError=null;
+    state.holdedSuccess=null;
+
+    render();
+
+    try{
+
+      await apiFetch(
+        '/config/holded',
+        {
+          method:'POST',
+          body:JSON.stringify({
+            api_key:state.holdedApiKey
+          })
+        }
+      );
+
+      state.holdedConfigured=true;
+      state.holdedSuccess='API key guardada y verificada.';
+      state.holdedApiKey='';
+
+    }catch(e){
+
+      state.holdedError='Error: '+e.message;
+
+    }finally{
+
+      state.holdedSaving=false;
+
+      render();
+    }
+  }
+
+
+  async function deleteHoldedKey(){
+
+    if(!confirm('¿Eliminar la API key de Holded?')){
+      return;
+    }
+
+    try{
+
+      await apiFetch(
+        '/config/holded',
+        {
+          method:'DELETE'
+        }
+      );
+
+      state.holdedConfigured=false;
+
+      render();
+
+    }catch(e){
+
+      console.error(e);
+    }
+  }
+
+
+  // ── Render Nuevo ──────────────────────────────────────────
+
+  function renderNuevo(){
+
+    const gmailDot=
+      state.gmailConnected
+        ? 'connected'
+        : '';
+
+    const gmailLabel=
+      state.gmailConnected
+        ? 'Gmail conectado'
+        : 'Conectar Gmail';
+
+    const gmailSub=
+      state.gmailConnected
+        ? 'Puedes cargar emails con facturas directamente'
+        : 'Conecta tu cuenta para cargar facturas automáticamente';
+
+    const gmailBtn=
+      state.gmailConnected
+
+      ? `
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+
+          <button
+            class="er-btn er-btn-ghost"
+            style="font-family:'IBM Plex Mono',monospace;font-size:11px;"
+            data-action="gmail-emails"
+            ${state.gmailLoading?'disabled':''}
+          >
+            ${state.gmailLoading?'Cargando…':'Ver emails'}
+          </button>
+
+          <button
+            class="er-btn er-btn-ghost"
+            style="font-family:'IBM Plex Mono',monospace;font-size:11px;"
+            data-action="gmail-refresh"
+            ${state.gmailLoading?'disabled':''}
+          >
+            ↻ Actualizar
+          </button>
+
         </div>
+      `
+
+      : `
+        <button
+          class="er-btn er-btn-ghost"
+          style="font-family:'IBM Plex Mono',monospace;font-size:11px;"
+          data-action="gmail-connect"
+        >
+          Conectar
+        </button>
+      `;
+
+
+    let gmailEmailsHTML='';
+
+
+    if(state.gmailConnected){
+
+      gmailEmailsHTML=`
+        <div class="er-gmail-emails">
+
+          <div class="er-gmail-toolbar">
+
+            <div class="er-section-hint" style="margin:0;">
+              Emails con facturas detectadas:
+            </div>
+
+            ${
+              state.gmailEmails.length>0
+                ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted-dark);">
+                    ${state.gmailEmails.length} email(s)
+                  </span>`
+                : ''
+            }
+
+          </div>
+
+          ${
+            state.gmailLoading
+
+            ? `
+              <div class="er-processing">
+                <div class="er-spinner"></div>
+                <div class="er-processing-step">
+                  Cargando emails…
+                </div>
+              </div>
+            `
+
+            : state.gmailEmails.length>0
+
+            ? state.gmailEmails.map(e=>`
+
+              <div class="er-gmail-email">
+
+                <div class="er-gmail-email-info">
+
+                  <b>${esc(e.subject||'Sin asunto')}</b>
+
+                  <div class="er-gmail-email-meta">
+                    ${esc(e.from||'')}
+                    ${e.date?' · '+esc(e.date):''}
+                  </div>
+
+                </div>
+
+                <button
+                  class="er-btn-sm er-btn-primary"
+                  data-action="gmail-process"
+                  data-id="${esc(e.id)}"
+                  style="background:var(--text-ink);color:var(--paper);border:none;"
+                >
+                  Procesar
+                </button>
+
+              </div>
+
+            `).join('')
+
+            : `
+              <div class="er-gmail-empty">
+                No hay emails disponibles.
+                Pulsa <b>Actualizar</b> para volver a consultar Gmail.
+              </div>
+            `
+          }
+
+          ${
+            state.gmailError
+              ? `
+                <div class="er-error" style="margin-top:10px;">
+                  ${esc(state.gmailError)}
+                </div>
+              `
+              : ''
+          }
+
+        </div>
+      `;
+    }
+
+
+    return `
+
+      <div class="er-panel">
+
+        <div class="er-gmail">
+
+          <div class="er-gmail-left">
+
+            <div class="er-gmail-dot ${gmailDot}"></div>
+
+            <div class="er-gmail-text">
+
+              <b>${gmailLabel}</b>
+
+              <span>${gmailSub}</span>
+
+            </div>
+
+          </div>
+
+          ${gmailBtn}
+
+        </div>
+
 
         ${gmailEmailsHTML}
 
-        <div class="er-section-title">Origen del expediente</div>
-        <div class="er-section-hint">Pega el texto del email o sube la factura en PDF / imagen.</div>
+
+        <div class="er-section-title">
+          Origen del expediente
+        </div>
+
+        <div class="er-section-hint">
+          Pega el texto del email o sube la factura en PDF / imagen.
+        </div>
+
 
         <div class="er-source-toggle">
-          <button class="er-toggle-btn ${state.sourceMode==='texto'?'active':''}" data-action="source" data-value="texto">Pegar texto</button>
-          <button class="er-toggle-btn ${state.sourceMode==='archivo'?'active':''}" data-action="source" data-value="archivo">Subir PDF / imagen</button>
+
+          <button
+            class="er-toggle-btn ${state.sourceMode==='texto'?'active':''}"
+            data-action="source"
+            data-value="texto"
+          >
+            Pegar texto
+          </button>
+
+          <button
+            class="er-toggle-btn ${state.sourceMode==='archivo'?'active':''}"
+            data-action="source"
+            data-value="archivo"
+          >
+            Subir PDF / imagen
+          </button>
+
         </div>
 
-        ${state.sourceMode==='texto' ? `
-          <textarea class="er-textarea" id="er-textarea" placeholder="Pega aquí el contenido del email con la factura…">${esc(state.pastedText)}</textarea>
-          <div class="er-privacy-note">El backend detecta y pseudonimiza NIF, IBAN, emails y teléfonos antes de enviar a Gemini.</div>
-        ` : `
-          <label class="er-filedrop" for="er-file-input">
-            <input type="file" id="er-file-input" accept="image/*,application/pdf"/>
-            <div class="er-filedrop-label"><b>Toca para subir</b> una foto o PDF de la factura</div>
-          </label>
-          ${state.file ? `
-            <div class="er-file-preview">
-              ${state.file.isImage ? `<img src="data:${state.file.mime};base64,${state.file.base64}"/>` : '📄'}
-              <span>${esc(state.file.name)}</span>
-              <button class="er-file-remove" data-action="remove-file">Quitar</button>
-            </div>` : ''}
-          <div class="er-privacy-note">El archivo se envía directamente a Gemini sin pasar por servidores de terceros.</div>
-        `}
 
-        ${state.error ? `<div class="er-error">${esc(state.error)}</div>` : ''}
+        ${
+          state.sourceMode==='texto'
+
+          ? `
+
+            <textarea
+              class="er-textarea"
+              id="er-textarea"
+              placeholder="Pega aquí el contenido del email con la factura…"
+            >${esc(state.pastedText)}</textarea>
+
+            <div class="er-privacy-note">
+              El backend detecta y pseudonimiza NIF, IBAN, emails y teléfonos antes de enviar a Gemini.
+            </div>
+
+          `
+
+          : `
+
+            <label
+              class="er-filedrop"
+              for="er-file-input"
+            >
+
+              <input
+                type="file"
+                id="er-file-input"
+                accept="image/*,application/pdf"
+              />
+
+              <div class="er-filedrop-label">
+                <b>Toca para subir</b> una foto o PDF de la factura
+              </div>
+
+            </label>
+
+
+            ${
+              state.file
+
+              ? `
+
+                <div class="er-file-preview">
+
+                  ${
+                    state.file.isImage
+                      ? `<img src="data:${state.file.mime};base64,${state.file.base64}"/>`
+                      : '📄'
+                  }
+
+                  <span>${esc(state.file.name)}</span>
+
+                  <button
+                    class="er-file-remove"
+                    data-action="remove-file"
+                  >
+                    Quitar
+                  </button>
+
+                </div>
+
+              `
+
+              : ''
+            }
+
+
+            <div class="er-privacy-note">
+              El archivo se envía directamente a Gemini sin pasar por servidores de terceros.
+            </div>
+
+          `
+        }
+
+
+        ${
+          state.error
+            ? `<div class="er-error">${esc(state.error)}</div>`
+            : ''
+        }
+
 
         <div class="er-actions">
-          <button class="er-btn er-btn-primary" data-action="process" ${state.processing?'disabled':''}>Procesar expediente</button>
+
+          <button
+            class="er-btn er-btn-primary"
+            data-action="process"
+            ${state.processing?'disabled':''}
+          >
+            Procesar expediente
+          </button>
+
         </div>
+
       </div>
 
-      ${state.processing ? `
-        <div class="er-panel"><div class="er-processing">
-          <div class="er-spinner"></div>
-          <div class="er-processing-step">${esc(state.stage)}</div>
-        </div></div>` : ''}
 
-      ${state.extracted && !state.processing ? renderExtracted() : ''}
+      ${
+        state.processing
+
+        ? `
+
+          <div class="er-panel">
+
+            <div class="er-processing">
+
+              <div class="er-spinner"></div>
+
+              <div class="er-processing-step">
+                ${esc(state.stage)}
+              </div>
+
+            </div>
+
+          </div>
+
+        `
+
+        : ''
+      }
+
+
+      ${
+        state.extracted && !state.processing
+          ? renderExtracted()
+          : ''
+      }
+
     `;
   }
+
+
+  // ── Render extracted ─────────────────────────────────────
 
   function renderExtracted(){
+
     const ex=state.extracted;
+
     return `
+
       <div class="er-panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
-          <div class="er-section-title" style="margin:0;">Revisión antes de guardar</div>
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          flex-wrap:wrap;
+          gap:10px;
+          margin-bottom:4px;
+        ">
+
+          <div
+            class="er-section-title"
+            style="margin:0;"
+          >
+            Revisión antes de guardar
+          </div>
+
           ${stampHTML('seudonimizado')}
+
         </div>
-        <div class="er-section-hint">Comprueba y corrige los datos. Nada se guarda hasta que confirmes.</div>
+
+
+        <div class="er-section-hint">
+          Comprueba y corrige los datos. Nada se guarda hasta que confirmes.
+        </div>
+
+
         <div class="er-form-grid">
+
           ${field('proveedor','Proveedor',ex.proveedor)}
+
           ${field('nif_proveedor','NIF / CIF',ex.nif_proveedor)}
+
           ${field('fecha','Fecha',ex.fecha)}
+
           ${field('moneda','Moneda',ex.moneda)}
+
           ${field('concepto','Concepto',ex.concepto,true)}
+
           ${field('base_imponible','Base imponible',ex.base_imponible)}
+
           ${field('iva_porcentaje','IVA %',ex.iva_porcentaje)}
+
           ${field('iva_importe','IVA importe',ex.iva_importe)}
+
           ${field('total','Total',ex.total)}
+
         </div>
-        ${state.error ? `<div class="er-error">${esc(state.error)}</div>` : ''}
+
+
+        ${
+          state.error
+            ? `<div class="er-error">${esc(state.error)}</div>`
+            : ''
+        }
+
+
         <div class="er-actions">
-          <button class="er-btn er-btn-ghost" data-action="discard">Descartar</button>
-          <button class="er-btn er-btn-primary" data-action="save">Guardar en el archivo</button>
+
+          <button
+            class="er-btn er-btn-ghost"
+            data-action="discard"
+          >
+            Descartar
+          </button>
+
+          <button
+            class="er-btn er-btn-primary"
+            data-action="save"
+          >
+            Guardar en el archivo
+          </button>
+
         </div>
+
       </div>
+
     `;
   }
+
 
   function field(key,label,value,full){
-    return `<div class="er-field ${full?'full':''}">
-      <label>${label}</label>
-      <input type="text" data-field="${key}" value="${esc(value)}"/>
-    </div>`;
+
+    return `
+
+      <div class="er-field ${full?'full':''}">
+
+        <label>${label}</label>
+
+        <input
+          type="text"
+          data-field="${key}"
+          value="${esc(value)}"
+        />
+
+      </div>
+
+    `;
   }
+
+
+  // ── Render archivo ───────────────────────────────────────
 
   function renderArchivo(){
-    if(!state.archiveLoaded) return `<div class="er-panel"><div class="er-processing"><div class="er-spinner"></div><div class="er-processing-step">Cargando…</div></div></div>`;
+
+    if(!state.archiveLoaded){
+
+      return `
+
+        <div class="er-panel">
+
+          <div class="er-processing">
+
+            <div class="er-spinner"></div>
+
+            <div class="er-processing-step">
+              Cargando…
+            </div>
+
+          </div>
+
+        </div>
+
+      `;
+    }
+
 
     const filtered=state.archive.filter(f=>{
-      if(!state.search)return true;
-      const s=state.search.toLowerCase();
-      return (f.proveedor||'').toLowerCase().includes(s)||(f.concepto||'').toLowerCase().includes(s);
-    });
-    const totalSum=state.archive.reduce((a,f)=>a+(f.total||0),0);
 
-    if(state.archive.length===0) return `<div class="er-panel"><div class="er-empty"><b>El archivo está vacío</b>Procesa tu primer expediente desde "Nuevo expediente".</div></div>`;
+      if(!state.search){
+        return true;
+      }
+
+      const s=state.search.toLowerCase();
+
+      return (
+        (f.proveedor||'').toLowerCase().includes(s) ||
+        (f.concepto||'').toLowerCase().includes(s)
+      );
+    });
+
+
+    const totalSum=
+      state.archive.reduce(
+        (a,f)=>a+(f.total||0),
+        0
+      );
+
+
+    if(state.archive.length===0){
+
+      return `
+
+        <div class="er-panel">
+
+          <div class="er-empty">
+
+            <b>El archivo está vacío</b>
+
+            Procesa tu primer expediente desde
+            "Nuevo expediente".
+
+          </div>
+
+        </div>
+
+      `;
+    }
+
 
     return `
+
       <div class="er-panel">
+
         <div class="er-stats">
-          <div class="er-stat"><b>${state.archive.length}</b><span>Expedientes</span></div>
-          <div class="er-stat"><b>${fmtMoney(totalSum,'EUR')}</b><span>Importe total</span></div>
-        </div>
-        <div class="er-toolbar">
-          <input class="er-search" placeholder="Buscar por proveedor o concepto…" value="${esc(state.search)}" data-action="search"/>
-          <button class="er-btn-sm er-btn-ghost" style="border:1.5px solid var(--text-ink);background:transparent;color:var(--text-ink);" data-action="export">Exportar CSV</button>
-        </div>
-        ${filtered.map(f=>`
-          <div class="er-card" data-card="${f.id}">
-            <div class="er-card-top">
-              <div>
-                <div class="er-card-folio">${f.folio}</div>
-                <div class="er-card-prov">${esc(f.proveedor)}</div>
-                <div class="er-card-meta"><span>${f.fecha||'sin fecha'}</span>${stampHTML(f.estado)}</div>
-              </div>
-              <div class="er-card-amount">${fmtMoney(f.total,f.moneda)}</div>
-            </div>
-            <div class="er-card-detail">
-              <div class="er-card-detail-grid">
-                <div><span>NIF</span>${esc(f.nif_proveedor||'—')}</div>
-                <div><span>Concepto</span>${esc(f.concepto||'—')}</div>
-                <div><span>Base imponible</span>${fmtMoney(f.base_imponible,f.moneda)}</div>
-                <div><span>IVA</span>${f.iva_porcentaje!=null?f.iva_porcentaje+'%':'—'} (${fmtMoney(f.iva_importe,f.moneda)})</div>
-                ${f.holded_id?`<div><span>Holded ID</span>${esc(f.holded_id)}</div>`:''}
-              </div>
-              <div class="er-card-detail-actions">
-                ${f.estado!=='enviado_holded'
-                  ? `<button class="er-btn-sm" style="background:transparent;border:1.5px solid var(--stamp-green);color:var(--stamp-green);" data-action="holded" data-id="${f.id}">Enviar a Holded</button>`
-                  : `<span class="er-stamp green" style="font-size:10px;">En Holded</span>`}
-                <button class="er-btn-sm er-btn-danger" data-action="delete" data-id="${f.id}">Eliminar</button>
-              </div>
-            </div>
+
+          <div class="er-stat">
+
+            <b>${state.archive.length}</b>
+
+            <span>Expedientes</span>
+
           </div>
-        `).join('')}
+
+          <div class="er-stat">
+
+            <b>${fmtMoney(totalSum,'EUR')}</b>
+
+            <span>Importe total</span>
+
+          </div>
+
+        </div>
+
+
+        <div class="er-toolbar">
+
+          <input
+            class="er-search"
+            placeholder="Buscar por proveedor o concepto…"
+            value="${esc(state.search)}"
+            data-action="search"
+          />
+
+          <button
+            class="er-btn-sm er-btn-ghost"
+            style="
+              border:1.5px solid var(--text-ink);
+              background:transparent;
+              color:var(--text-ink);
+            "
+            data-action="export"
+          >
+            Exportar CSV
+          </button>
+
+        </div>
+
+
+        ${
+          filtered.length===0
+
+          ? `
+
+            <div class="er-empty" style="padding:30px 10px;">
+              No hay resultados para "${esc(state.search)}".
+            </div>
+
+          `
+
+          : filtered.map(f=>`
+
+            <div
+              class="er-card"
+              data-card="${f.id}"
+            >
+
+              <div class="er-card-top">
+
+                <div>
+
+                  <div class="er-card-folio">
+                    ${esc(f.folio||'')}
+                  </div>
+
+                  <div class="er-card-prov">
+                    ${esc(f.proveedor||'')}
+                  </div>
+
+                  <div class="er-card-meta">
+
+                    <span>
+                      ${esc(f.fecha||'sin fecha')}
+                    </span>
+
+                    ${stampHTML(f.estado)}
+
+                  </div>
+
+                </div>
+
+
+                <div class="er-card-amount">
+                  ${fmtMoney(f.total,f.moneda)}
+                </div>
+
+              </div>
+
+
+              <div class="er-card-detail">
+
+                <div class="er-card-detail-grid">
+
+                  <div>
+
+                    <span>NIF</span>
+
+                    ${esc(f.nif_proveedor||'—')}
+
+                  </div>
+
+
+                  <div>
+
+                    <span>Concepto</span>
+
+                    ${esc(f.concepto||'—')}
+
+                  </div>
+
+
+                  <div>
+
+                    <span>Base imponible</span>
+
+                    ${fmtMoney(
+                      f.base_imponible,
+                      f.moneda
+                    )}
+
+                  </div>
+
+
+                  <div>
+
+                    <span>IVA</span>
+
+                    ${
+                      f.iva_porcentaje!=null
+                        ? f.iva_porcentaje+'%'
+                        : '—'
+                    }
+
+                    (
+                    ${fmtMoney(
+                      f.iva_importe,
+                      f.moneda
+                    )}
+                    )
+
+                  </div>
+
+
+                  ${
+                    f.holded_id
+
+                    ? `
+
+                      <div>
+
+                        <span>Holded ID</span>
+
+                        ${esc(f.holded_id)}
+
+                      </div>
+
+                    `
+
+                    : ''
+                  }
+
+                </div>
+
+
+                <div class="er-card-detail-actions">
+
+                  ${
+                    f.estado!=='enviado_holded'
+
+                    ? `
+
+                      <button
+                        class="er-btn-sm"
+                        style="
+                          background:transparent;
+                          border:1.5px solid var(--stamp-green);
+                          color:var(--stamp-green);
+                        "
+                        data-action="holded"
+                        data-id="${f.id}"
+                      >
+                        Enviar a Holded
+                      </button>
+
+                    `
+
+                    : `
+
+                      <span
+                        class="er-stamp green"
+                        style="font-size:10px;"
+                      >
+                        En Holded
+                      </span>
+
+                    `
+                  }
+
+
+                  <button
+                    class="er-btn-sm er-btn-danger"
+                    data-action="delete"
+                    data-id="${f.id}"
+                  >
+                    Eliminar
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          `).join('')
+        }
+
       </div>
+
     `;
   }
+
+
+  // ── Render configuración ─────────────────────────────────
 
   function renderConfig(){
+
     return `
-      <div class="er-panel">
-        <div class="er-section-title">Gmail OAuth</div>
-        <div class="er-section-hint">Conecta tu cuenta de Google para importar facturas directamente desde tu bandeja.</div>
-        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
-          <div class="er-gmail-dot ${state.gmailConnected?'connected':''}"></div>
-          <span style="font-size:13px;">${state.gmailConnected?'Gmail conectado':'No conectado'}</span>
-          ${state.gmailConnected
-            ? `<button class="er-btn-sm er-btn-danger" data-action="gmail-disconnect">Desconectar</button>`
-            : `<button class="er-btn-sm er-btn-primary" style="background:var(--text-ink);color:var(--paper);border:none;" data-action="gmail-connect-cfg">Conectar Gmail</button>`}
-        </div>
-      </div>
 
       <div class="er-panel">
-        <div class="er-section-title">Holded</div>
-        <div class="er-section-hint">Introduce tu API key de Holded para enviar facturas automáticamente.</div>
-        <div style="display:flex;align-items:center;gap:8px;margin:10px 0 4px;">
-          <div class="er-gmail-dot ${state.holdedConfigured?'connected':''}"></div>
-          <span style="font-size:13px;">${state.holdedConfigured?'API key configurada':'Sin configurar'}</span>
-          ${state.holdedConfigured?`<button class="er-btn-sm er-btn-danger" data-action="holded-delete">Eliminar key</button>`:''}
+
+        <div class="er-section-title">
+          Gmail OAuth
         </div>
-        ${!state.holdedConfigured ? `
-          <div class="er-holded-form">
-            <input type="password" id="holded-key-input" placeholder="Pega aquí tu API key de Holded…" value="${esc(state.holdedApiKey)}"/>
-            <button class="er-btn er-btn-primary" data-action="holded-save" ${state.holdedSaving?'disabled':''}>Guardar</button>
-          </div>` : ''}
-        ${state.holdedError?`<div class="er-error" style="margin-top:10px;">${esc(state.holdedError)}</div>`:''}
-        ${state.holdedSuccess?`<div style="margin-top:10px;color:var(--stamp-green);font-size:13px;">✓ ${esc(state.holdedSuccess)}</div>`:''}
+
+        <div class="er-section-hint">
+          Conecta tu cuenta de Google para importar facturas directamente desde tu bandeja.
+        </div>
+
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:12px;
+          margin-top:10px;
+          flex-wrap:wrap;
+        ">
+
+          <div
+            class="er-gmail-dot ${state.gmailConnected?'connected':''}"
+          ></div>
+
+
+          <span style="font-size:13px;">
+            ${
+              state.gmailConnected
+                ? 'Gmail conectado'
+                : 'No conectado'
+            }
+          </span>
+
+
+          ${
+            state.gmailConnected
+
+            ? `
+
+              <button
+                class="er-btn-sm er-btn-danger"
+                data-action="gmail-disconnect"
+                ${state.gmailLoading?'disabled':''}
+              >
+                ${
+                  state.gmailLoading
+                    ? 'Procesando…'
+                    : 'Desconectar'
+                }
+              </button>
+
+            `
+
+            : `
+
+              <button
+                class="er-btn-sm er-btn-primary"
+                style="
+                  background:var(--text-ink);
+                  color:var(--paper);
+                  border:none;
+                "
+                data-action="gmail-connect-cfg"
+              >
+                Conectar Gmail
+              </button>
+
+            `
+          }
+
+        </div>
+
+
+        ${
+          state.gmailError
+
+          ? `
+
+            <div
+              class="er-error"
+              style="margin-top:12px;"
+            >
+              ${esc(state.gmailError)}
+            </div>
+
+          `
+
+          : ''
+        }
+
       </div>
+
+
+      <div class="er-panel">
+
+        <div class="er-section-title">
+          Holded
+        </div>
+
+        <div class="er-section-hint">
+          Introduce tu API key de Holded para enviar facturas automáticamente.
+        </div>
+
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:8px;
+          margin:10px 0 4px;
+          flex-wrap:wrap;
+        ">
+
+          <div
+            class="er-gmail-dot ${state.holdedConfigured?'connected':''}"
+          ></div>
+
+
+          <span style="font-size:13px;">
+
+            ${
+              state.holdedConfigured
+                ? 'API key configurada'
+                : 'Sin configurar'
+            }
+
+          </span>
+
+
+          ${
+            state.holdedConfigured
+
+            ? `
+
+              <button
+                class="er-btn-sm er-btn-danger"
+                data-action="holded-delete"
+              >
+                Eliminar key
+              </button>
+
+            `
+
+            : ''
+          }
+
+        </div>
+
+
+        ${
+          !state.holdedConfigured
+
+          ? `
+
+            <div class="er-holded-form">
+
+              <input
+                type="password"
+                id="holded-key-input"
+                placeholder="Pega aquí tu API key de Holded…"
+                value="${esc(state.holdedApiKey)}"
+              />
+
+              <button
+                class="er-btn er-btn-primary"
+                data-action="holded-save"
+                ${state.holdedSaving?'disabled':''}
+              >
+                Guardar
+              </button>
+
+            </div>
+
+          `
+
+          : ''
+        }
+
+
+        ${
+          state.holdedError
+
+          ? `
+
+            <div
+              class="er-error"
+              style="margin-top:10px;"
+            >
+              ${esc(state.holdedError)}
+            </div>
+
+          `
+
+          : ''
+        }
+
+
+        ${
+          state.holdedSuccess
+
+          ? `
+
+            <div
+              style="
+                margin-top:10px;
+                color:var(--stamp-green);
+                font-size:13px;
+              "
+            >
+              ✓ ${esc(state.holdedSuccess)}
+            </div>
+
+          `
+
+          : ''
+        }
+
+      </div>
+
     `;
   }
 
+
+  // ── Render principal ─────────────────────────────────────
+
   function render(){
-    document.querySelectorAll('.er-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===state.tab));
-    if(state.tab==='nuevo') content.innerHTML=renderNuevo();
-    else if(state.tab==='archivo') content.innerHTML=renderArchivo();
-    else content.innerHTML=renderConfig();
+
+    document
+      .querySelectorAll('.er-tab')
+      .forEach(t=>{
+        t.classList.toggle(
+          'active',
+          t.dataset.tab===state.tab
+        );
+      });
+
+
+    if(state.tab==='nuevo'){
+
+      content.innerHTML=renderNuevo();
+
+    }else if(state.tab==='archivo'){
+
+      content.innerHTML=renderArchivo();
+
+    }else{
+
+      content.innerHTML=renderConfig();
+    }
   }
 
-  // ── Events ────────────────────────────────────────────────
-  document.querySelectorAll('.er-tab').forEach(tab=>{
-    tab.addEventListener('click',async()=>{
-      state.tab=tab.dataset.tab;
-      state.error=null;
-      if(state.tab==='archivo' && !state.archiveLoaded){ await loadArchive(); }
-      render();
+
+  // ── Tabs ──────────────────────────────────────────────────
+
+  document
+    .querySelectorAll('.er-tab')
+    .forEach(tab=>{
+
+      tab.addEventListener(
+        'click',
+        async()=>{
+
+          state.tab=tab.dataset.tab;
+          state.error=null;
+
+          if(
+            state.tab==='archivo' &&
+            !state.archiveLoaded
+          ){
+
+            await loadArchive();
+          }
+
+          render();
+        }
+      );
     });
-  });
 
-  content.addEventListener('click',async(e)=>{
-    const el=e.target.closest('[data-action]');
-    if(!el)return;
-    const action=el.dataset.action;
 
-    if(action==='source'){ state.sourceMode=el.dataset.value; state.error=null; render(); }
-    else if(action==='process'){ await handleProcess(); }
-    else if(action==='remove-file'){ state.file=null; render(); }
-    else if(action==='discard'){ state.extracted=null; render(); }
-    else if(action==='save'){ await saveExpediente(); }
-    else if(action==='delete'){ if(confirm('¿Eliminar este expediente?')) await deleteExpediente(el.dataset.id); }
-    else if(action==='holded'){ await sendToHolded(el.dataset.id); }
-    else if(action==='export'){ exportCSV(); }
-    else if(action==='gmail-emails'){ await loadGmailEmails(); }
-    else if(action==='gmail-process'){ await processGmailEmail(el.dataset.id); }
-    else if(action==='gmail-connect'||action==='gmail-connect-cfg'){
-      // Obtener la URL de auth y redirigir
-      try{ const d=await apiFetch('/gmail/auth-url'); window.location.href=d.url; }catch(err){ alert('Error obteniendo URL de autenticación: '+err.message); }
-    }
-    else if(action==='holded-save'){ await saveHoldedKey(); }
-    else if(action==='holded-delete'){ await deleteHoldedKey(); }
+  // ── Click events ──────────────────────────────────────────
 
-    // toggle card
-    const card=e.target.closest('.er-card');
-    if(card && !el){ card.classList.toggle('open'); }
-  });
+  content.addEventListener(
+    'click',
+    async(e)=>{
 
-  content.addEventListener('click',e=>{
-    const card=e.target.closest('.er-card');
-    const action=e.target.closest('[data-action]');
-    if(card && !action){ card.classList.toggle('open'); }
-  });
+      const el=e.target.closest('[data-action]');
 
-  content.addEventListener('input',e=>{
-    if(e.target.id==='er-textarea'){ state.pastedText=e.target.value; }
-    else if(e.target.dataset.action==='search'){ state.search=e.target.value; render(); }
-    else if(e.target.dataset.field){ state.extracted[e.target.dataset.field]=e.target.value; }
-    else if(e.target.id==='holded-key-input'){ state.holdedApiKey=e.target.value; }
-  });
+      if(!el){
 
-  content.addEventListener('change',e=>{
-    if(e.target.id==='er-file-input'&&e.target.files[0]){
-      const f=e.target.files[0];
-      const reader=new FileReader();
-      reader.onload=()=>{
-        state.file={name:f.name,mime:f.type,base64:reader.result.split(',')[1],isImage:f.type.startsWith('image/')};
+        const card=e.target.closest('.er-card');
+
+        if(card){
+          card.classList.toggle('open');
+        }
+
+        return;
+      }
+
+
+      const action=el.dataset.action;
+
+
+      if(action==='source'){
+
+        state.sourceMode=el.dataset.value;
+        state.error=null;
+
         render();
-      };
-      reader.readAsDataURL(f);
+
+      }
+
+
+      else if(action==='process'){
+
+        await handleProcess();
+
+      }
+
+
+      else if(action==='remove-file'){
+
+        state.file=null;
+
+        render();
+
+      }
+
+
+      else if(action==='discard'){
+
+        state.extracted=null;
+
+        render();
+
+      }
+
+
+      else if(action==='save'){
+
+        await saveExpediente();
+
+      }
+
+
+      else if(action==='delete'){
+
+        if(
+          confirm('¿Eliminar este expediente?')
+        ){
+
+          await deleteExpediente(
+            el.dataset.id
+          );
+        }
+
+      }
+
+
+      else if(action==='holded'){
+
+        await sendToHolded(
+          el.dataset.id
+        );
+
+      }
+
+
+      else if(action==='export'){
+
+        exportCSV();
+
+      }
+
+
+      else if(action==='gmail-emails'){
+
+        await loadGmailEmails();
+
+      }
+
+
+      else if(action==='gmail-refresh'){
+
+        await loadGmailEmails();
+
+      }
+
+
+      else if(action==='gmail-process'){
+
+        await processGmailEmail(
+          el.dataset.id
+        );
+
+      }
+
+
+      else if(
+        action==='gmail-connect' ||
+        action==='gmail-connect-cfg'
+      ){
+
+        await connectGmail();
+
+      }
+
+
+      else if(action==='gmail-disconnect'){
+
+        await disconnectGmail();
+
+      }
+
+
+      else if(action==='holded-save'){
+
+        await saveHoldedKey();
+
+      }
+
+
+      else if(action==='holded-delete'){
+
+        await deleteHoldedKey();
+
+      }
+
+
+      const card=e.target.closest('.er-card');
+
+      if(card && !el){
+
+        card.classList.toggle('open');
+      }
+
     }
-  });
+  );
+
+
+  // ── Card click ────────────────────────────────────────────
+
+  content.addEventListener(
+    'click',
+    e=>{
+
+      const card=e.target.closest('.er-card');
+      const action=e.target.closest('[data-action]');
+
+      if(card && !action){
+
+        card.classList.toggle('open');
+      }
+    }
+  );
+
+
+  // ── Input events ──────────────────────────────────────────
+
+  content.addEventListener(
+    'input',
+    e=>{
+
+      if(e.target.id==='er-textarea'){
+
+        state.pastedText=e.target.value;
+
+      }
+
+
+      else if(
+        e.target.dataset.action==='search'
+      ){
+
+        state.search=e.target.value;
+
+        render();
+
+        const searchInput=
+          document.querySelector('.er-search');
+
+        if(searchInput){
+
+          searchInput.focus();
+
+          try{
+
+            searchInput.setSelectionRange(
+              state.search.length,
+              state.search.length
+            );
+
+          }catch(err){}
+
+        }
+
+      }
+
+
+      else if(e.target.dataset.field){
+
+        if(state.extracted){
+
+          state.extracted[
+            e.target.dataset.field
+          ]=e.target.value;
+        }
+
+      }
+
+
+      else if(
+        e.target.id==='holded-key-input'
+      ){
+
+        state.holdedApiKey=e.target.value;
+      }
+
+    }
+  );
+
+
+  // ── File input ────────────────────────────────────────────
+
+  content.addEventListener(
+    'change',
+    e=>{
+
+      if(
+        e.target.id==='er-file-input' &&
+        e.target.files[0]
+      ){
+
+        const f=e.target.files[0];
+
+        const reader=new FileReader();
+
+        reader.onload=()=>{
+
+          state.file={
+            name:f.name,
+            mime:f.type,
+            base64:reader.result.split(',')[1],
+            isImage:f.type.startsWith('image/')
+          };
+
+          render();
+        };
+
+        reader.readAsDataURL(f);
+      }
+
+    }
+  );
+
+
+  // ── Export CSV ────────────────────────────────────────────
 
   function exportCSV(){
-    const headers=['folio','proveedor','nif_proveedor','fecha','concepto','base_imponible','iva_porcentaje','iva_importe','total','moneda','estado'];
-    const rows=state.archive.map(f=>headers.map(h=>`"${(f[h]??'').toString().replace(/"/g,'""')}"`).join(','));
-    const csv=[headers.join(','),...rows].join('\n');
-    const blob=new Blob([csv],{type:'text/csv'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url; a.download='expedientes.csv';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+
+    const headers=[
+      'folio',
+      'proveedor',
+      'nif_proveedor',
+      'fecha',
+      'concepto',
+      'base_imponible',
+      'iva_porcentaje',
+      'iva_importe',
+      'total',
+      'moneda',
+      'estado'
+    ];
+
+
+    const rows=
+      state.archive.map(
+        f=>
+          headers
+            .map(
+              h=>
+                `"${(f[h]??'')
+                  .toString()
+                  .replace(/"/g,'""')}"`
+            )
+            .join(',')
+      );
+
+
+    const csv=[
+      headers.join(','),
+      ...rows
+    ].join('\n');
+
+
+    const blob=
+      new Blob(
+        [csv],
+        {type:'text/csv'}
+      );
+
+
+    const url=
+      URL.createObjectURL(blob);
+
+
+    const a=
+      document.createElement('a');
+
+    a.href=url;
+    a.download='expedientes.csv';
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    document.body.removeChild(a);
+
     URL.revokeObjectURL(url);
   }
 
+
   // ── Init ──────────────────────────────────────────────────
+
   async function init(){
+
     render();
-    await Promise.all([checkGmailStatus(), checkHoldedStatus()]);
+
+
+    await Promise.all([
+      checkGmailStatus(),
+      checkHoldedStatus()
+    ]);
+
+
     render();
-    // Si viene de callback de Gmail
-    if(new URLSearchParams(location.search).get('gmail')==='conectado'){
+
+
+    // ── Callback de Google OAuth ────────────────────────────
+
+    const params=
+      new URLSearchParams(
+        location.search
+      );
+
+
+    if(
+      params.get('gmail')==='conectado'
+    ){
+
       state.gmailConnected=true;
-      history.replaceState({},'','/');
+      state.gmailEmails=[];
+      state.gmailError=null;
+
+      history.replaceState(
+        {},
+        '',
+        '/'
+      );
+
       render();
+
+
+      // Cargar automáticamente los emails
+      await loadGmailEmails();
     }
+
+
+    // ── Si Gmail ya estaba conectado ────────────────────────
+
+    if(
+      state.gmailConnected &&
+      state.tab==='nuevo'
+    ){
+
+      // No cargamos automáticamente aquí si acabamos
+      // de venir del OAuth, porque ya lo hemos hecho arriba.
+
+      if(
+        params.get('gmail')!=='conectado'
+      ){
+
+        // Dejamos la lista vacía hasta que el usuario
+        // pulse "Ver emails" o "Actualizar".
+        state.gmailEmails=[];
+        render();
+      }
+    }
+
   }
+
+
   init();
+
 })();
 </script>
+
 </body>
 </html>
