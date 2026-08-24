@@ -1,14 +1,18 @@
 """
-gmail_client.py — OAuth 2.0 con Gmail + lectura de emails.
+gmail_client.py — OAuth 2.0 con Gmail + lectura de emails con facturas.
 """
 
 import os
 import base64
 import httpx
+
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
+
 from database import GmailToken
 
+
+# ─── Configuración ────────────────────────────────────────────────────────────
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -17,9 +21,25 @@ REDIRECT_URI = os.getenv("REDIRECT_URI")
 SCOPES = "https://www.googleapis.com/auth/gmail.readonly"
 
 
+# Palabras que consideramos relacionadas con facturas.
+#
+# La búsqueda principal se hace sobre el ASUNTO del email.
+# Después volvemos a comprobar el asunto nosotros mismos.
+INVOICE_SUBJECT_KEYWORDS = [
+    "factura",
+    "invoice",
+    "receipt",
+    "recibo",
+    "bill",
+    "facturación",
+    "facturacion",
+]
+
+
 # ─── URLs de OAuth ────────────────────────────────────────────────────────────
 
 def get_auth_url() -> str:
+
     params = (
         f"client_id={GOOGLE_CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}"
@@ -29,10 +49,11 @@ def get_auth_url() -> str:
         f"&prompt=consent"
     )
 
-    return f"https://accounts.google.com/o/oauth2/v2/auth?{params}"
+    return (
+        "https://accounts.google.com/o/oauth2/v2/auth?"
+        + params
+    )
 
-
-# ─── Intercambio OAuth ────────────────────────────────────────────────────────
 
 async def exchange_code_for_token(code: str) -> dict:
 
@@ -54,9 +75,9 @@ async def exchange_code_for_token(code: str) -> dict:
     return resp.json()
 
 
-# ─── Renovación del access token ──────────────────────────────────────────────
-
-async def refresh_access_token(refresh_token: str) -> dict:
+async def refresh_access_token(
+    refresh_token: str
+) -> dict:
 
     async with httpx.AsyncClient() as client:
 
@@ -82,7 +103,10 @@ def save_token(
     token_data: dict
 ):
 
-    record = db.query(GmailToken).first()
+    record = (
+        db.query(GmailToken)
+        .first()
+    )
 
     expiry = None
 
@@ -97,10 +121,17 @@ def save_token(
 
     if record:
 
-        record.access_token = token_data["access_token"]
+        record.access_token = (
+            token_data["access_token"]
+        )
 
-        if token_data.get("refresh_token"):
-            record.refresh_token = token_data["refresh_token"]
+        # Google normalmente solamente devuelve
+        # refresh_token durante la autorización inicial.
+        if "refresh_token" in token_data:
+
+            record.refresh_token = (
+                token_data["refresh_token"]
+            )
 
         record.token_expiry = expiry
 
@@ -123,16 +154,23 @@ def save_token(
 async def revoke_token(
     db: Session
 ) -> bool:
+
     """
-    Revoca el acceso de Gmail en Google
-    y elimina el token almacenado localmente.
+    Revoca el acceso de Gmail en Google y elimina
+    el token almacenado en nuestra base de datos.
     """
 
-    record = db.query(GmailToken).first()
+    record = (
+        db.query(GmailToken)
+        .first()
+    )
 
     if not record:
+
         return True
 
+    # Preferimos revocar el refresh token porque es
+    # el que permite mantener el acceso a Gmail.
     token = (
         record.refresh_token
         or record.access_token
@@ -155,9 +193,15 @@ async def revoke_token(
                     },
                 )
 
-                # Google devuelve 200 si se revoca.
-                # 400 puede significar que ya era inválido.
-                if resp.status_code not in (200, 400):
+                # 200 = revocado correctamente.
+                #
+                # 400 puede significar que el token ya
+                # estaba revocado o ya no era válido.
+                if resp.status_code not in (
+                    200,
+                    400
+                ):
+
                     resp.raise_for_status()
 
         except Exception as e:
@@ -167,8 +211,8 @@ async def revoke_token(
                 f"el token de Google: {e}"
             )
 
-    # Aunque Google falle al revocar,
-    # eliminamos siempre el token local.
+    # Aunque Google no responda correctamente,
+    # eliminamos el token local.
     db.delete(record)
 
     db.commit()
@@ -180,9 +224,13 @@ async def get_valid_access_token(
     db: Session
 ) -> str | None:
 
-    record = db.query(GmailToken).first()
+    record = (
+        db.query(GmailToken)
+        .first()
+    )
 
     if not record:
+
         return None
 
     if (
@@ -191,11 +239,10 @@ async def get_valid_access_token(
         >= record.token_expiry
     ):
 
-        if not record.refresh_token:
-            return None
-
-        new_token = await refresh_access_token(
-            record.refresh_token
+        new_token = (
+            await refresh_access_token(
+                record.refresh_token
+            )
         )
 
         save_token(
@@ -203,143 +250,261 @@ async def get_valid_access_token(
             new_token
         )
 
-        return new_token["access_token"]
+        return new_token[
+            "access_token"
+        ]
 
     return record.access_token
 
 
-# ─── Listar emails ────────────────────────────────────────────────────────────
+# ─── Lectura de emails ────────────────────────────────────────────────────────
 
 async def list_invoice_emails(
     access_token: str,
     max_results: int = 20
 ) -> list[dict]:
+
     """
-    Devuelve los últimos emails de Gmail.
+    Busca emails que parezcan facturas.
 
-    No filtra por palabras como "factura" y no exige
-    que tengan adjuntos. Esto permite que la aplicación
-    vea también los emails de prueba.
+    CRITERIOS:
 
-    El botón "Procesar" decidirá después qué email
-    contiene realmente una factura.
+    1. El email tiene que tener un adjunto.
+    2. La palabra relacionada con factura tiene que
+       aparecer en el ASUNTO.
+    3. Volvemos a comprobar el asunto localmente.
+    4. La comparación local no distingue mayúsculas
+       y minúsculas.
+
+    Ejemplos que deberían aparecer:
+
+        Factura 1234
+        Factura de agosto
+        FACTURA 2026
+        Invoice August
+        INVOICE #123
+        Recibo de compra
+
+    Ejemplos que NO deberían aparecer:
+
+        Reunión del próximo martes
+        Information about your new Google Account
+        Tu pedido ha sido enviado
+        Gracias por contactar
     """
 
     headers = {
-        "Authorization":
-        f"Bearer {access_token}"
+        "Authorization": (
+            f"Bearer {access_token}"
+        )
     }
+
+    # ─────────────────────────────────────────────
+    # BÚSQUEDA DE GMAIL
+    # ─────────────────────────────────────────────
+    #
+    # subject: es importante.
+    #
+    # De esta manera no basta con que la palabra
+    # "factura" aparezca en el cuerpo del correo.
+    #
+    query = (
+        "has:attachment "
+        "("
+        'subject:factura OR '
+        'subject:invoice OR '
+        'subject:receipt OR '
+        'subject:recibo OR '
+        'subject:bill OR '
+        'subject:facturación OR '
+        'subject:facturacion'
+        ")"
+    )
 
     async with httpx.AsyncClient() as client:
 
-        # ── Obtener IDs de los últimos emails ───────────────
+        # ─────────────────────────────────────────
+        # Obtener IDs de mensajes
+        # ─────────────────────────────────────────
 
         resp = await client.get(
-            "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+            "https://gmail.googleapis.com/"
+            "gmail/v1/users/me/messages",
             headers=headers,
             params={
+                "q": query,
                 "maxResults": max_results,
             },
         )
 
         resp.raise_for_status()
 
-        messages = resp.json().get(
-            "messages",
-            []
+        messages = (
+            resp.json()
+            .get(
+                "messages",
+                []
+            )
         )
 
         results = []
 
-        # ── Obtener información de cada email ───────────────
+        # ─────────────────────────────────────────
+        # Obtener metadata de cada email
+        # ─────────────────────────────────────────
 
-        for msg in messages[:max_results]:
+        for msg in messages:
 
-            message_id = msg.get("id")
+            try:
 
-            if not message_id:
-                continue
+                detail = await client.get(
+                    "https://gmail.googleapis.com/"
+                    f"gmail/v1/users/me/messages/"
+                    f"{msg['id']}",
+                    headers=headers,
+                    params={
+                        "format": "metadata",
+                        "metadataHeaders": [
+                            "Subject",
+                            "From",
+                            "Date",
+                        ],
+                    },
+                )
 
-            detail = await client.get(
-                (
-                    "https://gmail.googleapis.com/gmail/v1/"
-                    f"users/me/messages/{message_id}"
-                ),
-                headers=headers,
-                params={
-                    "format": "metadata",
-                    "metadataHeaders": [
-                        "Subject",
-                        "From",
-                        "Date",
-                    ],
-                },
-            )
+                detail.raise_for_status()
 
-            detail.raise_for_status()
+                data = detail.json()
 
-            d = detail.json()
+                headers_list = (
+                    data
+                    .get("payload", {})
+                    .get("headers", [])
+                )
 
-            headers_list = (
-                d.get("payload", {})
-                .get("headers", [])
-            )
+                # Convertimos los nombres de headers
+                # a minúsculas para evitar problemas.
+                header_map = {
+                    h["name"].lower():
+                    h["value"]
+                    for h in headers_list
+                }
 
-            hmap = {
-                h["name"]: h["value"]
-                for h in headers_list
-            }
-
-            results.append({
-                "id": message_id,
-
-                "subject": hmap.get(
-                    "Subject",
+                subject = header_map.get(
+                    "subject",
                     "(sin asunto)"
-                ),
+                )
 
-                "from": hmap.get(
-                    "From",
+                sender = header_map.get(
+                    "from",
                     ""
-                ),
+                )
 
-                "date": hmap.get(
-                    "Date",
+                date = header_map.get(
+                    "date",
                     ""
-                ),
+                )
 
-                "snippet": d.get(
+                snippet = data.get(
                     "snippet",
                     ""
-                ),
-            })
+                )
+
+                # ─────────────────────────────────
+                # SEGUNDO FILTRO LOCAL
+                # ─────────────────────────────────
+                #
+                # casefold() permite comparar sin
+                # preocuparnos por mayúsculas/minúsculas.
+                #
+                # Ejemplo:
+                #
+                # FACTURA
+                # Factura
+                # factura
+                #
+                # todos funcionan.
+                # ─────────────────────────────────
+
+                subject_normalized = (
+                    subject.casefold()
+                )
+
+                is_invoice = any(
+                    keyword.casefold()
+                    in subject_normalized
+                    for keyword
+                    in INVOICE_SUBJECT_KEYWORDS
+                )
+
+                if not is_invoice:
+
+                    continue
+
+                # ─────────────────────────────────
+                # Añadir email válido
+                # ─────────────────────────────────
+
+                results.append({
+
+                    "id": msg["id"],
+
+                    "subject": subject,
+
+                    "from": sender,
+
+                    "date": date,
+
+                    "snippet": snippet,
+
+                })
+
+                # Seguridad: no devolver más de
+                # max_results resultados válidos.
+                if len(results) >= max_results:
+
+                    break
+
+            except Exception as e:
+
+                print(
+                    "WARNING: No se pudo leer "
+                    f"el email {msg.get('id')}: {e}"
+                )
+
+                continue
 
     return results
 
 
-# ─── Obtener contenido completo de un email ───────────────────────────────────
+# ─── Contenido del email ──────────────────────────────────────────────────────
 
 async def get_email_content(
     access_token: str,
     message_id: str
 ) -> dict:
+
     """
     Obtiene el contenido completo de un email,
-    incluyendo texto y archivos adjuntos.
+    incluyendo texto y adjuntos.
     """
 
     headers = {
-        "Authorization":
-        f"Bearer {access_token}"
+        "Authorization": (
+            f"Bearer {access_token}"
+        )
     }
 
     async with httpx.AsyncClient() as client:
 
+        # ─────────────────────────────────────────
+        # Obtener mensaje completo
+        # ─────────────────────────────────────────
+
         resp = await client.get(
-            (
-                "https://gmail.googleapis.com/gmail/v1/"
-                f"users/me/messages/{message_id}"
-            ),
+            "https://gmail.googleapis.com/"
+            "gmail/v1/users/me/messages/"
+            f"{message_id}",
             headers=headers,
             params={
                 "format": "full"
@@ -356,69 +521,83 @@ async def get_email_content(
         )
 
         result = {
-            "id": message.get("id"),
-            "thread_id": message.get("threadId"),
-            "snippet": message.get("snippet", ""),
+
+            "id": message.get(
+                "id"
+            ),
+
+            "thread_id": message.get(
+                "threadId"
+            ),
+
+            "snippet": message.get(
+                "snippet",
+                ""
+            ),
+
             "headers": {},
+
             "text": "",
+
             "html": "",
+
             "attachments": [],
+
         }
 
-        # ── Headers ─────────────────────────────────────────
+        # ─────────────────────────────────────────
+        # Headers
+        # ─────────────────────────────────────────
 
         headers_list = payload.get(
             "headers",
             []
         )
 
-        for header in headers_list:
+        result["headers"] = {
+            h["name"]: h["value"]
+            for h in headers_list
+        }
 
-            name = header.get(
-                "name",
-                ""
-            )
+        # ─────────────────────────────────────────
+        # Procesar partes del mensaje
+        # ─────────────────────────────────────────
 
-            value = header.get(
-                "value",
-                ""
-            )
-
-            result["headers"][name] = value
-
-        # ── Recorrer partes del email ───────────────────────
-
-        await _process_parts(
-            client,
-            headers,
-            message_id,
-            payload,
-            result
+        await _process_message_part(
+            client=client,
+            headers=headers,
+            part=payload,
+            result=result,
         )
 
         return result
 
 
-async def _process_parts(
+async def _process_message_part(
     client: httpx.AsyncClient,
     headers: dict,
-    message_id: str,
     part: dict,
     result: dict
 ):
+
     """
-    Recorre recursivamente las partes MIME del email.
-    Extrae texto, HTML y adjuntos.
+    Recorre recursivamente las partes de un email.
+
+    Detecta:
+
+    - text/plain
+    - text/html
+    - PDF
+    - imágenes
+    - otros adjuntos
     """
 
-    mime_type = part.get(
-        "mimeType",
-        ""
-    )
-
-    filename = part.get(
-        "filename",
-        ""
+    mime_type = (
+        part.get(
+            "mimeType",
+            ""
+        )
+        or ""
     )
 
     body = part.get(
@@ -426,64 +605,41 @@ async def _process_parts(
         {}
     )
 
-    data = body.get(
-        "data"
+    filename = (
+        part.get(
+            "filename",
+            ""
+        )
+        or ""
     )
 
-    attachment_id = body.get(
-        "attachmentId"
-    )
+    # ─────────────────────────────────────────
+    # Texto plano
+    # ─────────────────────────────────────────
 
-    # ── Texto / HTML ────────────────────────────────────────
+    if mime_type == "text/plain":
 
-    if data and mime_type in (
-        "text/plain",
-        "text/html",
-    ):
+        data = body.get(
+            "data"
+        )
 
-        try:
-
-            decoded = base64.urlsafe_b64decode(
-                data + "=" * (
-                    -len(data) % 4
-                )
-            ).decode(
-                "utf-8",
-                errors="replace"
-            )
-
-            if mime_type == "text/plain":
-
-                result["text"] += decoded
-
-            else:
-
-                result["html"] += decoded
-
-        except Exception as e:
-
-            print(
-                "WARNING: Error decodificando "
-                f"parte {mime_type}: {e}"
-            )
-
-    # ── Adjuntos ────────────────────────────────────────────
-
-    if filename:
-
-        attachment_data = None
-
-        # El contenido puede venir directamente
-        # dentro del body.
         if data:
 
             try:
 
-                attachment_data = (
-                    base64.urlsafe_b64decode(
-                        data + "=" * (
-                            -len(data) % 4
-                        )
+                decoded = base64.urlsafe_b64decode(
+                    data + "="
+                    * (
+                        4
+                        - len(data) % 4
+                    )
+                )
+
+                result["text"] += (
+                    decoded
+                    .decode(
+                        "utf-8",
+                        errors="replace"
                     )
                 )
 
@@ -491,44 +647,93 @@ async def _process_parts(
 
                 print(
                     "WARNING: Error decodificando "
-                    f"adjunto {filename}: {e}"
+                    f"text/plain: {e}"
                 )
 
-        # O Gmail puede devolver un attachmentId.
+    # ─────────────────────────────────────────
+    # HTML
+    # ─────────────────────────────────────────
+
+    elif mime_type == "text/html":
+
+        data = body.get(
+            "data"
+        )
+
+        if data:
+
+            try:
+
+                decoded = base64.urlsafe_b64decode(
+                    data + "="
+                    * (
+                        4
+                        - len(data) % 4
+                    )
+                )
+
+                result["html"] += (
+                    decoded
+                    .decode(
+                        "utf-8",
+                        errors="replace"
+                    )
+                )
+
+            except Exception as e:
+
+                print(
+                    "WARNING: Error decodificando "
+                    f"text/html: {e}"
+                )
+
+    # ─────────────────────────────────────────
+    # Adjuntos
+    # ─────────────────────────────────────────
+
+    if filename:
+
+        attachment_id = body.get(
+            "attachmentId"
+        )
+
+        data_b64 = body.get(
+            "data"
+        )
+
+        attachment_data = None
+
+        # Algunas veces Gmail devuelve el contenido
+        # directamente.
+        if data_b64:
+
+            attachment_data = data_b64
+
+        # Otras veces devuelve únicamente attachmentId.
         elif attachment_id:
 
             try:
 
-                resp = await client.get(
-                    (
-                        "https://gmail.googleapis.com/gmail/v1/"
-                        f"users/me/messages/{message_id}/"
-                        f"attachments/{attachment_id}"
-                    ),
+                attachment_resp = await client.get(
+                    "https://gmail.googleapis.com/"
+                    "gmail/v1/users/me/messages/"
+                    f"{result['id']}/attachments/"
+                    f"{attachment_id}",
                     headers=headers,
                 )
 
-                resp.raise_for_status()
+                attachment_resp.raise_for_status()
 
-                attachment_json = resp.json()
-
-                attachment_b64 = (
-                    attachment_json.get(
-                        "data",
-                        ""
-                    )
+                attachment_json = (
+                    attachment_resp.json()
                 )
 
-                if attachment_b64:
-
-                    attachment_data = (
-                        base64.urlsafe_b64decode(
-                            attachment_b64
-                            + "=" * (
-                                -len(attachment_b64) % 4
-                            )
-                        )
+                attachment_data = (
+                    attachment_json
+                    .get(
+                        "data"
                     )
+                )
 
             except Exception as e:
 
@@ -537,27 +742,30 @@ async def _process_parts(
                     f"adjunto {filename}: {e}"
                 )
 
-        if attachment_data is not None:
+        if attachment_data:
 
             result["attachments"].append({
+
                 "filename": filename,
+
                 "mime_type": mime_type,
-                "data_b64": base64.b64encode(
-                    attachment_data
-                ).decode("ascii"),
+
+                "data_b64": attachment_data,
+
             })
 
-    # ── Partes hijas ─────────────────────────────────────────
+    # ─────────────────────────────────────────
+    # Partes internas
+    # ─────────────────────────────────────────
 
     for child in part.get(
         "parts",
         []
     ):
 
-        await _process_parts(
-            client,
-            headers,
-            message_id,
-            child,
-            result
+        await _process_message_part(
+            client=client,
+            headers=headers,
+            part=child,
+            result=result,
         )
