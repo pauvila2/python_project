@@ -320,7 +320,7 @@ textarea.er-textarea:focus{outline:2px solid var(--stamp-gold);outline-offset:1p
     const gmailSub = state.gmailConnected ? 'Puedes cargar emails con facturas directamente' : 'Conecta tu cuenta para cargar facturas automáticamente';
     const gmailBtn = state.gmailConnected
       ? `<button class="er-btn er-btn-ghost" style="font-family:'IBM Plex Mono',monospace;font-size:11px;" data-action="gmail-emails">Ver emails</button>`
-      : `<a href="/gmail/auth-url" id="gmail-auth-link"><button class="er-btn er-btn-ghost" style="font-family:'IBM Plex Mono',monospace;font-size:11px;" data-action="gmail-connect">Conectar</button></a>`;
+      : `<button class="er-btn er-btn-ghost" style="font-family:'IBM Plex Mono',monospace;font-size:11px;" data-action="gmail-connect">Conectar</button>`;
 
     let gmailEmailsHTML = '';
     if(state.gmailConnected && state.gmailEmails.length > 0){
