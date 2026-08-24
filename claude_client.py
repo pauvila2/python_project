@@ -10,7 +10,7 @@ import httpx
 import json
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_MODEL   = "gemini-1.5-flash"
+GEMINI_MODEL   = "gemini-3.7-flash"
 GEMINI_URL     = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
 SYSTEM_PROMPT = """Eres un motor de extraccion de datos de facturas.
@@ -73,7 +73,6 @@ async def extract_invoice_data(parts: list) -> dict:
         "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
         "contents": [{"role": "user", "parts": parts}],
         "generationConfig": {
-            "temperature": 0,
             "maxOutputTokens": 1000,
         },
     }
