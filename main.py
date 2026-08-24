@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -36,8 +36,8 @@ def startup():
 
 
 @app.get("/")
-def health():
-    return {"status": "ok", "app": "expediente-backend"}
+def home():
+    return FileResponse("static/index.html")
 
 
 # ─── Gmail OAuth ──────────────────────────────────────────────────────────────
