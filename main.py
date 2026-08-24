@@ -5,6 +5,7 @@ FastAPI + PostgreSQL + Gmail OAuth + Holded + Claude AI
 
 import os
 import time
+from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, FileResponse
@@ -17,9 +18,16 @@ import claude_client
 import gmail_client
 import holded_client
 
-app = FastAPI(title="Expediente Backend", version="1.0.0")
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "*")
+app = FastAPI(
+    title="Expediente Backend",
+    version="1.0.0"
+)
+
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+    "https://web-production-050a84.up.railway.app"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,10 +37,14 @@ app.add_middleware(
 )
 
 
+# ─── Startup ──────────────────────────────────────────────────────────────────
+
 @app.on_event("startup")
 def startup():
     init_db()
 
+
+# ─── Home ─────────────────────────────────────────────────────────────────────
 
 @app.get("/")
 def home():
@@ -43,33 +55,72 @@ def home():
 
 @app.get("/gmail/auth-url")
 def gmail_auth_url():
-    return {"url": gmail_client.get_auth_url()}
+    return {
+        "url": gmail_client.get_auth_url()
+    }
 
 
 @app.get("/gmail/callback")
-async def gmail_callback(code: str, db: Session = Depends(get_db)):
+async def gmail_callback(
+    code: str,
+    db: Session = Depends(get_db)
+):
     try:
         token_data = await gmail_client.exchange_code_for_token(code)
         gmail_client.save_token(db, token_data)
+
     except Exception as e:
         raise HTTPException(
             status_code=400,
             detail=f"Error al obtener token de Gmail: {e}"
         )
 
-    frontend_url = os.getenv("FRONTEND_URL", "https://claude.ai")
-    return RedirectResponse(url=f"{frontend_url}?gmail=conectado")
+    return RedirectResponse(
+        url=f"{FRONTEND_URL}?gmail=conectado"
+    )
 
 
 @app.get("/gmail/status")
-def gmail_status(db: Session = Depends(get_db)):
+def gmail_status(
+    db: Session = Depends(get_db)
+):
     record = db.query(GmailToken).first()
-    connected = record is not None and bool(record.refresh_token)
-    return {"connected": connected}
+
+    connected = (
+        record is not None
+        and bool(record.refresh_token)
+    )
+
+    return {
+        "connected": connected
+    }
+
+
+@app.delete("/gmail/disconnect")
+def gmail_disconnect(
+    db: Session = Depends(get_db)
+):
+    """
+    Elimina completamente las credenciales OAuth de Gmail
+    guardadas en la base de datos.
+    """
+
+    records = db.query(GmailToken).all()
+
+    for record in records:
+        db.delete(record)
+
+    db.commit()
+
+    return {
+        "disconnected": True
+    }
 
 
 @app.get("/gmail/emails")
-async def gmail_emails(db: Session = Depends(get_db)):
+async def gmail_emails(
+    db: Session = Depends(get_db)
+):
     token = await gmail_client.get_valid_access_token(db)
 
     if not token:
@@ -80,7 +131,11 @@ async def gmail_emails(db: Session = Depends(get_db)):
 
     try:
         emails = await gmail_client.list_invoice_emails(token)
-        return {"emails": emails}
+
+        return {
+            "emails": emails
+        }
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -101,50 +156,61 @@ async def gmail_process_email(
             detail="Gmail no conectado."
         )
 
+    # Obtener contenido del email
     try:
         content = await gmail_client.get_email_content(
             token,
             message_id
         )
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Error leyendo email: {e}"
         )
 
+    # Extraer información
     extracted = None
 
-    # Primero intentamos procesar los adjuntos
     for att in content.get("attachments", []):
 
-        if (
-            att["mime_type"] == "application/pdf"
-            or att["mime_type"].startswith("image/")
-        ):
-            data = att["data_b64"]
+        mime_type = att.get("mime_type", "")
+        data = att.get("data_b64", "")
 
-            if not data.startswith("__attachment_id__"):
-                try:
-                    extracted = await claude_client.extract_from_base64(
-                        data,
-                        att["mime_type"]
-                    )
+        if (
+            mime_type == "application/pdf"
+            or mime_type.startswith("image/")
+        ):
+
+            # Algunos adjuntos pueden ser referencias
+            # que todavía no se han descargado
+            if data.startswith("__attachment_id__"):
+                continue
+
+            try:
+                extracted = await claude_client.extract_from_base64(
+                    data,
+                    mime_type
+                )
+
+                if extracted:
                     break
 
-                except Exception as e:
-                    print(
-                        f"ERROR GEMINI ADJUNTO: "
-                        f"{type(e).__name__}: {e}"
-                    )
-                    continue
+            except Exception as e:
+                print(
+                    f"ERROR IA ADJUNTO: "
+                    f"{type(e).__name__}: {e}"
+                )
+                continue
 
-    # Si no hemos podido extraer nada del adjunto,
-    # intentamos utilizar el texto del email
+    # Si no hay adjunto válido, utilizar cuerpo del email
     if not extracted and content.get("body_text"):
+
         try:
             extracted = await claude_client.extract_from_text(
                 content["body_text"]
             )
+
         except Exception as e:
             raise HTTPException(
                 status_code=500,
@@ -159,7 +225,9 @@ async def gmail_process_email(
 
     extracted["_gmail_message_id"] = message_id
 
-    return {"extracted": extracted}
+    return {
+        "extracted": extracted
+    }
 
 
 # ─── Extracción manual ────────────────────────────────────────────────────────
@@ -174,7 +242,9 @@ class FileInput(BaseModel):
 
 
 @app.post("/extract/text")
-async def extract_text(body: TextInput):
+async def extract_text(
+    body: TextInput
+):
     if not body.text.strip():
         raise HTTPException(
             status_code=400,
@@ -182,8 +252,13 @@ async def extract_text(body: TextInput):
         )
 
     try:
-        result = await claude_client.extract_from_text(body.text)
-        return {"extracted": result}
+        result = await claude_client.extract_from_text(
+            body.text
+        )
+
+        return {
+            "extracted": result
+        }
 
     except Exception as e:
         raise HTTPException(
@@ -193,13 +268,18 @@ async def extract_text(body: TextInput):
 
 
 @app.post("/extract/file")
-async def extract_file(body: FileInput):
+async def extract_file(
+    body: FileInput
+):
     try:
         result = await claude_client.extract_from_base64(
             body.data_b64,
             body.mime_type
         )
-        return {"extracted": result}
+
+        return {
+            "extracted": result
+        }
 
     except Exception as e:
         raise HTTPException(
@@ -223,7 +303,10 @@ class ExpedienteInput(BaseModel):
     gmail_message_id: Optional[str] = None
 
 
-def exp_to_dict(e: Expediente) -> dict:
+def exp_to_dict(
+    e: Expediente
+) -> dict:
+
     return {
         "id": e.id,
         "folio": e.folio,
@@ -239,12 +322,18 @@ def exp_to_dict(e: Expediente) -> dict:
         "estado": e.estado,
         "holded_id": e.holded_id,
         "gmail_message_id": e.gmail_message_id,
-        "creado": e.creado.isoformat() if e.creado else None,
+        "creado": (
+            e.creado.isoformat()
+            if e.creado
+            else None
+        ),
     }
 
 
 @app.get("/expedientes")
-def list_expedientes(db: Session = Depends(get_db)):
+def list_expedientes(
+    db: Session = Depends(get_db)
+):
     items = (
         db.query(Expediente)
         .order_by(Expediente.creado.desc())
@@ -252,7 +341,10 @@ def list_expedientes(db: Session = Depends(get_db)):
     )
 
     return {
-        "expedientes": [exp_to_dict(e) for e in items]
+        "expedientes": [
+            exp_to_dict(e)
+            for e in items
+        ]
     }
 
 
@@ -261,9 +353,11 @@ def create_expediente(
     body: ExpedienteInput,
     db: Session = Depends(get_db)
 ):
+
     count = db.query(Expediente).count()
 
     exp_id = f"exp_{int(time.time() * 1000)}"
+
     folio = f"EXP-{(count + 1):04d}"
 
     exp = Expediente(
@@ -293,6 +387,7 @@ def get_expediente(
     exp_id: str,
     db: Session = Depends(get_db)
 ):
+
     exp = (
         db.query(Expediente)
         .filter(Expediente.id == exp_id)
@@ -313,6 +408,7 @@ def delete_expediente(
     exp_id: str,
     db: Session = Depends(get_db)
 ):
+
     exp = (
         db.query(Expediente)
         .filter(Expediente.id == exp_id)
@@ -328,7 +424,9 @@ def delete_expediente(
     db.delete(exp)
     db.commit()
 
-    return {"deleted": True}
+    return {
+        "deleted": True
+    }
 
 
 # ─── Holded ───────────────────────────────────────────────────────────────────
@@ -338,6 +436,7 @@ async def send_to_holded(
     exp_id: str,
     db: Session = Depends(get_db)
 ):
+
     exp = (
         db.query(Expediente)
         .filter(Expediente.id == exp_id)
@@ -359,6 +458,7 @@ async def send_to_holded(
         )
 
     try:
+
         result = await holded_client.create_purchase_invoice(
             api_key,
             exp_to_dict(exp)
@@ -381,6 +481,7 @@ async def send_to_holded(
         }
 
     except Exception as e:
+
         exp.estado = "error"
         db.commit()
 
@@ -392,7 +493,10 @@ async def send_to_holded(
 
 # ─── Configuración Holded ─────────────────────────────────────────────────────
 
-def _get_holded_key(db: Session) -> str | None:
+def _get_holded_key(
+    db: Session
+) -> str | None:
+
     cfg = (
         db.query(Config)
         .filter(Config.clave == "holded_api_key")
@@ -410,6 +514,7 @@ class HoldedKeyInput(BaseModel):
 def holded_config_status(
     db: Session = Depends(get_db)
 ):
+
     key = _get_holded_key(db)
 
     return {
@@ -422,6 +527,7 @@ async def save_holded_key(
     body: HoldedKeyInput,
     db: Session = Depends(get_db)
 ):
+
     works = await holded_client.test_connection(
         body.api_key
     )
@@ -440,22 +546,27 @@ async def save_holded_key(
 
     if cfg:
         cfg.valor = body.api_key
+
     else:
         cfg = Config(
             clave="holded_api_key",
             valor=body.api_key
         )
+
         db.add(cfg)
 
     db.commit()
 
-    return {"saved": True}
+    return {
+        "saved": True
+    }
 
 
 @app.delete("/config/holded")
 def delete_holded_key(
     db: Session = Depends(get_db)
 ):
+
     cfg = (
         db.query(Config)
         .filter(Config.clave == "holded_api_key")
@@ -466,13 +577,16 @@ def delete_holded_key(
         db.delete(cfg)
         db.commit()
 
-    return {"deleted": True}
+    return {
+        "deleted": True
+    }
 
 
 @app.get("/holded/test")
 async def test_holded(
     db: Session = Depends(get_db)
 ):
+
     key = _get_holded_key(db)
 
     if not key:
@@ -481,7 +595,9 @@ async def test_holded(
             detail="API key no configurada."
         )
 
-    works = await holded_client.test_connection(key)
+    works = await holded_client.test_connection(
+        key
+    )
 
     return {
         "connected": works
