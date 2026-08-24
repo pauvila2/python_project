@@ -136,50 +136,116 @@ async def list_invoice_emails(access_token: str, max_results: int = 20) -> list[
 
     return results
 
-
 async def get_email_content(access_token: str, message_id: str) -> dict:
     headers = {"Authorization": f"Bearer {access_token}"}
+
     async with httpx.AsyncClient() as client:
+        # Obtener el email completo
         resp = await client.get(
             f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{message_id}",
             headers=headers,
             params={"format": "full"},
         )
-    resp.raise_for_status()
-    msg = resp.json()
+        resp.raise_for_status()
+        msg = resp.json()
 
-    body_text   = ""
-    attachments = []
-    _parse_parts(msg.get("payload", {}), body_text, attachments, access_token)
-    return {"body_text": body_text, "attachments": attachments}
+        body_text = ""
+        attachments = []
+
+        await _parse_parts(
+            client,
+            msg.get("payload", {}),
+            body_text,
+            attachments,
+            access_token,
+            message_id,
+        )
+
+    return {
+        "body_text": body_text,
+        "attachments": attachments,
+    }
 
 
-def _parse_parts(payload: dict, body_text: str, attachments: list, access_token: str):
-    mime  = payload.get("mimeType", "")
+async def _parse_parts(
+    client,
+    payload: dict,
+    body_text: str,
+    attachments: list,
+    access_token: str,
+    message_id: str,
+):
+    mime = payload.get("mimeType", "")
     parts = payload.get("parts", [])
 
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    # Texto del email
     if mime == "text/plain" and not parts:
         data = payload.get("body", {}).get("data", "")
+
         if data:
-            body_text += base64.urlsafe_b64decode(data + "==").decode("utf-8", errors="ignore")
+            try:
+                decoded = base64.urlsafe_b64decode(data + "===")
+                body_text += decoded.decode("utf-8", errors="ignore")
+            except Exception:
+                pass
+
+    # HTML, por si el correo no tiene text/plain
+    elif mime == "text/html" and not parts:
+        data = payload.get("body", {}).get("data", "")
+
+        if data:
+            try:
+                decoded = base64.urlsafe_b64decode(data + "===")
+                body_text += decoded.decode("utf-8", errors="ignore")
+            except Exception:
+                pass
 
     for part in parts:
-        filename  = part.get("filename", "")
+        filename = part.get("filename", "")
         part_mime = part.get("mimeType", "")
-        body      = part.get("body", {})
+        body = part.get("body", {})
 
-        if filename and (part_mime == "application/pdf" or part_mime.startswith("image/")):
+        # PDF o imagen
+        if filename and (
+            part_mime == "application/pdf"
+            or part_mime.startswith("image/")
+        ):
             data = body.get("data")
+
+            # Si Gmail guarda el archivo como attachment,
+            # tenemos que descargarlo mediante attachmentId.
             if not data and body.get("attachmentId"):
-                data = f"__attachment_id__{body['attachmentId']}"
+                attachment_id = body["attachmentId"]
+
+                resp = await client.get(
+                    f"https://gmail.googleapis.com/gmail/v1/users/me/messages/"
+                    f"{message_id}/attachments/{attachment_id}",
+                    headers=headers,
+                )
+                resp.raise_for_status()
+
+                attachment_data = resp.json().get("data", "")
+
+                if attachment_data:
+                    # Gmail devuelve base64url. Lo normalizamos
+                    # para que Gemini pueda recibirlo.
+                    data = attachment_data.replace("-", "+").replace("_", "/")
+
             attachments.append({
-                "filename":  filename,
+                "filename": filename,
                 "mime_type": part_mime,
-                "data_b64":  data or "",
+                "data_b64": data or "",
             })
-        elif part.get("parts"):
-            _parse_parts(part, body_text, attachments, access_token)
-        elif part_mime == "text/plain":
-            data = body.get("data", "")
-            if data:
-                body_text += base64.urlsafe_b64decode(data + "==").decode("utf-8", errors="ignore")
+
+        # Multipart recursivo
+        if part.get("parts"):
+            await _parse_parts(
+                client,
+                part,
+                body_text,
+                attachments,
+                access_token,
+                message_id,
+            )
