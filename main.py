@@ -1,12 +1,11 @@
 """
 main.py — Backend de Expediente
-FastAPI + SQLite + Gmail OAuth + Holded + Claude AI
+FastAPI + PostgreSQL + Gmail OAuth + Holded + Claude AI
 """
 
 import os
 import time
-from datetime import datetime
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, FileResponse
 from pydantic import BaseModel
@@ -53,7 +52,10 @@ async def gmail_callback(code: str, db: Session = Depends(get_db)):
         token_data = await gmail_client.exchange_code_for_token(code)
         gmail_client.save_token(db, token_data)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al obtener token de Gmail: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error al obtener token de Gmail: {e}"
+        )
 
     frontend_url = os.getenv("FRONTEND_URL", "https://claude.ai")
     return RedirectResponse(url=f"{frontend_url}?gmail=conectado")
@@ -69,48 +71,94 @@ def gmail_status(db: Session = Depends(get_db)):
 @app.get("/gmail/emails")
 async def gmail_emails(db: Session = Depends(get_db)):
     token = await gmail_client.get_valid_access_token(db)
+
     if not token:
-        raise HTTPException(status_code=401, detail="Gmail no conectado.")
+        raise HTTPException(
+            status_code=401,
+            detail="Gmail no conectado."
+        )
+
     try:
         emails = await gmail_client.list_invoice_emails(token)
         return {"emails": emails}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 @app.post("/gmail/process/{message_id}")
-async def gmail_process_email(message_id: str, db: Session = Depends(get_db)):
+async def gmail_process_email(
+    message_id: str,
+    db: Session = Depends(get_db)
+):
     token = await gmail_client.get_valid_access_token(db)
+
     if not token:
-        raise HTTPException(status_code=401, detail="Gmail no conectado.")
+        raise HTTPException(
+            status_code=401,
+            detail="Gmail no conectado."
+        )
 
     try:
-        content = await gmail_client.get_email_content(token, message_id)
+        content = await gmail_client.get_email_content(
+            token,
+            message_id
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error leyendo email: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error leyendo email: {e}"
+        )
 
     extracted = None
+
+    # Primero intentamos procesar los adjuntos
     for att in content.get("attachments", []):
-        if att["mime_type"] == "application/pdf" or att["mime_type"].startswith("image/"):
+
+        if (
+            att["mime_type"] == "application/pdf"
+            or att["mime_type"].startswith("image/")
+        ):
             data = att["data_b64"]
+
             if not data.startswith("__attachment_id__"):
-               try:
-                    extracted = await claude_client.extract_from_base64(data, att["mime_type"])
+                try:
+                    extracted = await claude_client.extract_from_base64(
+                        data,
+                        att["mime_type"]
+                    )
                     break
+
                 except Exception as e:
-                    print(f"ERROR GEMINI ADJUNTO: {type(e).__name__}: {e}")
+                    print(
+                        f"ERROR GEMINI ADJUNTO: "
+                        f"{type(e).__name__}: {e}"
+                    )
                     continue
 
+    # Si no hemos podido extraer nada del adjunto,
+    # intentamos utilizar el texto del email
     if not extracted and content.get("body_text"):
         try:
-            extracted = await claude_client.extract_from_text(content["body_text"])
+            extracted = await claude_client.extract_from_text(
+                content["body_text"]
+            )
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error extrayendo datos: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error extrayendo datos: {e}"
+            )
 
     if not extracted:
-        raise HTTPException(status_code=422, detail="No se pudieron extraer datos de este email.")
+        raise HTTPException(
+            status_code=422,
+            detail="No se pudieron extraer datos de este email."
+        )
 
     extracted["_gmail_message_id"] = message_id
+
     return {"extracted": extracted}
 
 
@@ -118,6 +166,7 @@ async def gmail_process_email(message_id: str, db: Session = Depends(get_db)):
 
 class TextInput(BaseModel):
     text: str
+
 
 class FileInput(BaseModel):
     data_b64: str
@@ -127,72 +176,99 @@ class FileInput(BaseModel):
 @app.post("/extract/text")
 async def extract_text(body: TextInput):
     if not body.text.strip():
-        raise HTTPException(status_code=400, detail="El texto está vacío.")
+        raise HTTPException(
+            status_code=400,
+            detail="El texto está vacío."
+        )
+
     try:
         result = await claude_client.extract_from_text(body.text)
         return {"extracted": result}
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 @app.post("/extract/file")
 async def extract_file(body: FileInput):
     try:
-        result = await claude_client.extract_from_base64(body.data_b64, body.mime_type)
+        result = await claude_client.extract_from_base64(
+            body.data_b64,
+            body.mime_type
+        )
         return {"extracted": result}
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 # ─── Expedientes ──────────────────────────────────────────────────────────────
 
 class ExpedienteInput(BaseModel):
-    proveedor:        str
-    nif_proveedor:    Optional[str]   = None
-    fecha:            Optional[str]   = None
-    concepto:         Optional[str]   = None
-    base_imponible:   Optional[float] = None
-    iva_porcentaje:   Optional[float] = None
-    iva_importe:      Optional[float] = None
-    total:            Optional[float] = None
-    moneda:           Optional[str]   = "EUR"
-    gmail_message_id: Optional[str]   = None
+    proveedor: str
+    nif_proveedor: Optional[str] = None
+    fecha: Optional[str] = None
+    concepto: Optional[str] = None
+    base_imponible: Optional[float] = None
+    iva_porcentaje: Optional[float] = None
+    iva_importe: Optional[float] = None
+    total: Optional[float] = None
+    moneda: Optional[str] = "EUR"
+    gmail_message_id: Optional[str] = None
 
 
 def exp_to_dict(e: Expediente) -> dict:
     return {
-        "id":               e.id,
-        "folio":            e.folio,
-        "proveedor":        e.proveedor,
-        "nif_proveedor":    e.nif_proveedor,
-        "fecha":            e.fecha,
-        "concepto":         e.concepto,
-        "base_imponible":   e.base_imponible,
-        "iva_porcentaje":   e.iva_porcentaje,
-        "iva_importe":      e.iva_importe,
-        "total":            e.total,
-        "moneda":           e.moneda,
-        "estado":           e.estado,
-        "holded_id":        e.holded_id,
+        "id": e.id,
+        "folio": e.folio,
+        "proveedor": e.proveedor,
+        "nif_proveedor": e.nif_proveedor,
+        "fecha": e.fecha,
+        "concepto": e.concepto,
+        "base_imponible": e.base_imponible,
+        "iva_porcentaje": e.iva_porcentaje,
+        "iva_importe": e.iva_importe,
+        "total": e.total,
+        "moneda": e.moneda,
+        "estado": e.estado,
+        "holded_id": e.holded_id,
         "gmail_message_id": e.gmail_message_id,
-        "creado":           e.creado.isoformat() if e.creado else None,
+        "creado": e.creado.isoformat() if e.creado else None,
     }
 
 
 @app.get("/expedientes")
 def list_expedientes(db: Session = Depends(get_db)):
-    items = db.query(Expediente).order_by(Expediente.creado.desc()).all()
-    return {"expedientes": [exp_to_dict(e) for e in items]}
+    items = (
+        db.query(Expediente)
+        .order_by(Expediente.creado.desc())
+        .all()
+    )
+
+    return {
+        "expedientes": [exp_to_dict(e) for e in items]
+    }
 
 
 @app.post("/expedientes")
-def create_expediente(body: ExpedienteInput, db: Session = Depends(get_db)):
-    count  = db.query(Expediente).count()
+def create_expediente(
+    body: ExpedienteInput,
+    db: Session = Depends(get_db)
+):
+    count = db.query(Expediente).count()
+
     exp_id = f"exp_{int(time.time() * 1000)}"
-    folio  = f"EXP-{(count + 1):04d}"
+    folio = f"EXP-{(count + 1):04d}"
 
     exp = Expediente(
-        id=exp_id, folio=folio,
+        id=exp_id,
+        folio=folio,
         proveedor=body.proveedor,
         nif_proveedor=body.nif_proveedor,
         fecha=body.fecha,
@@ -204,57 +280,125 @@ def create_expediente(body: ExpedienteInput, db: Session = Depends(get_db)):
         moneda=body.moneda or "EUR",
         gmail_message_id=body.gmail_message_id,
     )
+
     db.add(exp)
     db.commit()
     db.refresh(exp)
+
     return exp_to_dict(exp)
 
 
 @app.get("/expedientes/{exp_id}")
-def get_expediente(exp_id: str, db: Session = Depends(get_db)):
-    exp = db.query(Expediente).filter(Expediente.id == exp_id).first()
+def get_expediente(
+    exp_id: str,
+    db: Session = Depends(get_db)
+):
+    exp = (
+        db.query(Expediente)
+        .filter(Expediente.id == exp_id)
+        .first()
+    )
+
     if not exp:
-        raise HTTPException(status_code=404, detail="Expediente no encontrado.")
+        raise HTTPException(
+            status_code=404,
+            detail="Expediente no encontrado."
+        )
+
     return exp_to_dict(exp)
 
 
 @app.delete("/expedientes/{exp_id}")
-def delete_expediente(exp_id: str, db: Session = Depends(get_db)):
-    exp = db.query(Expediente).filter(Expediente.id == exp_id).first()
+def delete_expediente(
+    exp_id: str,
+    db: Session = Depends(get_db)
+):
+    exp = (
+        db.query(Expediente)
+        .filter(Expediente.id == exp_id)
+        .first()
+    )
+
     if not exp:
-        raise HTTPException(status_code=404, detail="Expediente no encontrado.")
+        raise HTTPException(
+            status_code=404,
+            detail="Expediente no encontrado."
+        )
+
     db.delete(exp)
     db.commit()
+
     return {"deleted": True}
 
 
+# ─── Holded ───────────────────────────────────────────────────────────────────
+
 @app.post("/expedientes/{exp_id}/holded")
-async def send_to_holded(exp_id: str, db: Session = Depends(get_db)):
-    exp = db.query(Expediente).filter(Expediente.id == exp_id).first()
+async def send_to_holded(
+    exp_id: str,
+    db: Session = Depends(get_db)
+):
+    exp = (
+        db.query(Expediente)
+        .filter(Expediente.id == exp_id)
+        .first()
+    )
+
     if not exp:
-        raise HTTPException(status_code=404, detail="Expediente no encontrado.")
+        raise HTTPException(
+            status_code=404,
+            detail="Expediente no encontrado."
+        )
 
     api_key = _get_holded_key(db)
+
     if not api_key:
-        raise HTTPException(status_code=400, detail="API key de Holded no configurada.")
+        raise HTTPException(
+            status_code=400,
+            detail="API key de Holded no configurada."
+        )
 
     try:
-        result = await holded_client.create_purchase_invoice(api_key, exp_to_dict(exp))
-        holded_doc_id = result.get("id") or result.get("docId") or result.get("data", {}).get("id")
+        result = await holded_client.create_purchase_invoice(
+            api_key,
+            exp_to_dict(exp)
+        )
+
+        holded_doc_id = (
+            result.get("id")
+            or result.get("docId")
+            or result.get("data", {}).get("id")
+        )
+
         exp.holded_id = holded_doc_id
-        exp.estado    = "enviado_holded"
+        exp.estado = "enviado_holded"
+
         db.commit()
-        return {"holded_response": result, "holded_id": holded_doc_id}
+
+        return {
+            "holded_response": result,
+            "holded_id": holded_doc_id
+        }
+
     except Exception as e:
         exp.estado = "error"
         db.commit()
-        raise HTTPException(status_code=500, detail=f"Error al enviar a Holded: {e}")
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al enviar a Holded: {e}"
+        )
 
 
 # ─── Configuración Holded ─────────────────────────────────────────────────────
 
 def _get_holded_key(db: Session) -> str | None:
-    cfg = db.query(Config).filter(Config.clave == "holded_api_key").first()
+    cfg = (
+        db.query(Config)
+        .filter(Config.clave == "holded_api_key")
+        .first()
+    )
+
     return cfg.valor if cfg else None
 
 
@@ -263,40 +407,82 @@ class HoldedKeyInput(BaseModel):
 
 
 @app.get("/config/holded")
-def holded_config_status(db: Session = Depends(get_db)):
+def holded_config_status(
+    db: Session = Depends(get_db)
+):
     key = _get_holded_key(db)
-    return {"configured": key is not None}
+
+    return {
+        "configured": key is not None
+    }
 
 
 @app.post("/config/holded")
-async def save_holded_key(body: HoldedKeyInput, db: Session = Depends(get_db)):
-    works = await holded_client.test_connection(body.api_key)
-    if not works:
-        raise HTTPException(status_code=400, detail="La API key de Holded no es válida.")
+async def save_holded_key(
+    body: HoldedKeyInput,
+    db: Session = Depends(get_db)
+):
+    works = await holded_client.test_connection(
+        body.api_key
+    )
 
-    cfg = db.query(Config).filter(Config.clave == "holded_api_key").first()
+    if not works:
+        raise HTTPException(
+            status_code=400,
+            detail="La API key de Holded no es válida."
+        )
+
+    cfg = (
+        db.query(Config)
+        .filter(Config.clave == "holded_api_key")
+        .first()
+    )
+
     if cfg:
         cfg.valor = body.api_key
     else:
-        cfg = Config(clave="holded_api_key", valor=body.api_key)
+        cfg = Config(
+            clave="holded_api_key",
+            valor=body.api_key
+        )
         db.add(cfg)
+
     db.commit()
+
     return {"saved": True}
 
 
 @app.delete("/config/holded")
-def delete_holded_key(db: Session = Depends(get_db)):
-    cfg = db.query(Config).filter(Config.clave == "holded_api_key").first()
+def delete_holded_key(
+    db: Session = Depends(get_db)
+):
+    cfg = (
+        db.query(Config)
+        .filter(Config.clave == "holded_api_key")
+        .first()
+    )
+
     if cfg:
         db.delete(cfg)
         db.commit()
+
     return {"deleted": True}
 
 
 @app.get("/holded/test")
-async def test_holded(db: Session = Depends(get_db)):
+async def test_holded(
+    db: Session = Depends(get_db)
+):
     key = _get_holded_key(db)
+
     if not key:
-        raise HTTPException(status_code=400, detail="API key no configurada.")
+        raise HTTPException(
+            status_code=400,
+            detail="API key no configurada."
+        )
+
     works = await holded_client.test_connection(key)
-    return {"connected": works}
+
+    return {
+        "connected": works
+    }
