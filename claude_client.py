@@ -1,6 +1,7 @@
 """
-claude_client.py — Extracción de datos de facturas con Claude AI.
+claude_client.py — Extracción de datos de facturas con Gemini 1.5 Flash.
 Incluye una capa de pseudonimización para texto plano.
+Mantiene el mismo nombre de archivo para no tocar main.py ni nada más.
 """
 
 import re
@@ -8,11 +9,12 @@ import os
 import httpx
 import json
 
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-CLAUDE_MODEL = "claude-sonnet-4-6"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL   = "gemini-1.5-flash"
+GEMINI_URL     = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
-SYSTEM_PROMPT = """Eres un motor de extraccion de datos de facturas. 
-Analiza el contenido y devuelve UNICAMENTE un objeto JSON valido, sin texto adicional, 
+SYSTEM_PROMPT = """Eres un motor de extraccion de datos de facturas.
+Analiza el contenido y devuelve UNICAMENTE un objeto JSON valido, sin texto adicional,
 sin backticks de markdown, con estas claves exactas:
   proveedor (string), nif_proveedor (string), fecha (string formato DD/MM/AAAA),
   concepto (string breve), base_imponible (numero), iva_porcentaje (numero),
@@ -58,44 +60,55 @@ def reidentify(value, token_map: dict):
     return value
 
 
-# ─── Llamada a Claude ─────────────────────────────────────────────────────────
+# ─── Llamada a Gemini ─────────────────────────────────────────────────────────
 
-async def extract_invoice_data(content_blocks: list) -> dict:
+async def extract_invoice_data(parts: list) -> dict:
+    """
+    parts: lista de dicts en formato Gemini:
+      - texto:  {"text": "..."}
+      - imagen: {"inline_data": {"mime_type": "image/jpeg", "data": "<b64>"}}
+      - pdf:    {"inline_data": {"mime_type": "application/pdf", "data": "<b64>"}}
+    """
+    payload = {
+        "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+        "contents": [{"role": "user", "parts": parts}],
+        "generationConfig": {
+            "temperature": 0,
+            "maxOutputTokens": 1000,
+        },
+    }
+
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": CLAUDE_MODEL,
-                "max_tokens": 1000,
-                "system": SYSTEM_PROMPT,
-                "messages": [{"role": "user", "content": content_blocks}],
-            },
+            GEMINI_URL,
+            params={"key": GEMINI_API_KEY},
+            headers={"Content-Type": "application/json"},
+            json=payload,
         )
     resp.raise_for_status()
     data = resp.json()
-    raw = "".join(b.get("text", "") for b in data.get("content", [])).strip()
+
+    raw = (
+        data.get("candidates", [{}])[0]
+            .get("content", {})
+            .get("parts", [{}])[0]
+            .get("text", "")
+            .strip()
+    )
     clean = raw.replace("```json", "").replace("```", "").strip()
     return json.loads(clean)
 
 
 async def extract_from_text(text: str) -> dict:
     tokenized, token_map = pseudonymize(text)
-    extracted = await extract_invoice_data([{"type": "text", "text": tokenized}])
+    extracted = await extract_invoice_data([{"text": tokenized}])
     return {k: reidentify(v, token_map) for k, v in extracted.items()}
 
 
 async def extract_from_base64(b64data: str, mime_type: str) -> dict:
-    if mime_type.startswith("image/"):
-        block = {"type": "image", "source": {"type": "base64", "media_type": mime_type, "data": b64data}}
-    else:
-        block = {"type": "document", "source": {"type": "base64", "media_type": "application/pdf", "data": b64data}}
-
-    return await extract_invoice_data([
-        block,
-        {"type": "text", "text": "Extrae los datos de esta factura."}
-    ])
+    # PDFs e imágenes usan inline_data en Gemini
+    parts = [
+        {"inline_data": {"mime_type": mime_type, "data": b64data}},
+        {"text": "Extrae los datos de esta factura."},
+    ]
+    return await extract_invoice_data(parts)
